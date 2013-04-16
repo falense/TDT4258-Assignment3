@@ -24,3 +24,8 @@ endif
 clean:
 	rm -rf *.o *.ko .*.cmd *.mod.* .tmp*  Module.symvers modules.order Module.symvers modules.order
 
+HOSTIP = 129.241.103.212
+
+upload: default
+	scp ./* root@$(HOSTIP):/game/driver
+	scp ./driver.ko root@$(HOSTIP):/dev
