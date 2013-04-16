@@ -21,20 +21,22 @@ struct Color{
 typedef struct Color Color ;
 
 
-enum Block {White, Black, Blue, Red, Green};
+enum Block {White, Black, Blue, Red, Green,Yellow};
 typedef enum Block Block;
 
-extern int screenDeviceID = -1;
+extern int screenDeviceID;
 
 #define SCREENHEIGHT 240
 #define SCREENWIDTH 320
 
-#define H_BLOCKS 10
-#define W_BLOCKS 10
+#define H_BLOCKS 24
+#define W_BLOCKS 32	
 
-extern const unsigned int BLOCK_WIDTH = SCREENWIDTH/H_BLOCKS;
-extern const unsigned int BLOCK_HEIGHT = SCREENHEIGHT/W_BLOCKS;
+extern const unsigned int BLOCK_WIDTH;
+extern const unsigned int BLOCK_HEIGHT;
 
+extern char *currentFrameBuffer;
+extern char  *nextFrameBuffer;
 
 #define DEBUG 1
 
@@ -48,6 +50,8 @@ void setBlock(unsigned int bx,unsigned int by, Block b);
 
 void clearScreen(Color c);
 void clearScreenB();
+
+void refreshScreen(char*buffer);
 
 char* blockToData(Block b);
 #endif
