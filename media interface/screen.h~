@@ -29,8 +29,8 @@ extern int screenDeviceID;
 #define SCREENHEIGHT 240
 #define SCREENWIDTH 320
 
-#define H_BLOCKS 10
-#define W_BLOCKS 10	
+#define H_BLOCKS 24
+#define W_BLOCKS 32	
 
 extern const unsigned int BLOCK_WIDTH;
 extern const unsigned int BLOCK_HEIGHT;

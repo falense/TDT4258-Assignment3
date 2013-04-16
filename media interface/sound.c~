@@ -85,7 +85,92 @@ void setFrequency(double hertz){
 	}
 }
 
+/*This is an effect that sounds a bit like a sonar ping, cool sound effect not much more. 
+SpxID and volume is reset after running as these are persistant and we wouldnt want the sound to be played forever.*/
+void effect_sonar(){
+	int i,j;
+	for (j = 0; j < 3; j++)
+	for (i = 0; i <  20; i++){
+		setVolume(0, 200/(i+1));
+		setFrequency(323,0);
+		naive_wait(6000);
+		setFrequency(0,0);
+		naive_wait(3000);
+	}
+	setVolume(0,  200);
+	spxID = 0;
+}
 
+/*A rising pitch sound. SpxID is reset after running this sound to avoid eternal loop,
+ in addition the frequency is reset to 0 (ie. channel stopped/no sound) as otherwise it would just keep the same tone. */
+void effect_rising(){
+	short i;
+	for (i = 0; i <  20; i++){
+		setFrequency(323+i*20,0);
+		naive_wait(3000);
+	}
+	setFrequency(0,0);
+	spxID = 0;
+}
+
+/*A falling pitch sound. SpxID is reset after running this sound to avoid eternal loop,
+ in addition the frequency is reset to 0 (ie. channel stopped/no sound) as otherwise it would just keep the same tone. */
+void effect_falling(){
+	short rand = 723;
+	short i;
+	for (i = 0; i <  20; i++){
+		setFrequency(rand-i*20,0);
+		naive_wait(3000);
+	}
+	setFrequency(0,0);
+	spxID = 0;
+}
+/*Sound effect closest we could get to a shot. 
+SpxID is reset after running this sound to avoid eternal loop,
+in addition the frequency is reset to 0 (ie. channel stopped/no sound) as otherwise it would just keep the same tone.*/
+void effect_shot(){
+
+	tempo = 1;
+	short i;
+	for (i = 0; i <  20; i++){
+		setFrequency(323-i*20,0);
+		naive_wait(3000);
+	}
+	setFrequency(0,0);
+	spxID = 0;
+
+}
+/*Multiple shot effects in fast repetition. SpxID is reset after running this sound to avoid eternal loop, 
+in addition the frequency is reset to 0 (ie. channel stopped/no sound) as otherwise it would just keep the same tone.*/
+void effect_machinegun(){
+	short i, j;
+	for (j = 0; j < 15; j++)
+	for (i = 0; i <  20; i++){
+		setFrequency(323-i*20,0);
+		naive_wait(100);
+	}
+	setFrequency(0,0);
+	spxID = 0;
+}
+/*Combination of 3 rising and 1 falling effect, making this sound a bit like supermario. 
+SpxID is reset after running this sound to avoid eternal loop,
+ in addition the frequency is reset to 0 (ie. channel stopped/no sound) as otherwise it would just keep the same tone.*/
+void effect_supermario(){
+	short i;
+	for (i=0; i < 3; i++){
+		short j;
+		for (j = 0; j <  20; j++){
+			setFrequency(323+j*20,0);
+			naive_wait(1200);
+		}
+	}
+	for (i = 0; i <  20; i++){
+		setFrequency(723-i*20,0);
+		naive_wait(3000);
+	}
+	setFrequency(0,0);
+	spxID = 0;
+}
 void playSounds(){
 
 	char data[SOUNDBURSTWRITE+1];
