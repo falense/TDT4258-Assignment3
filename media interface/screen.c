@@ -1,15 +1,5 @@
-//http://servv89pn0aj.sn.sourcedns.com/~gbpprorg/guerrilla.net/reference/dsp/prog_dsp.htm
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <linux/soundcard.h>
-#include "media.h"
+#include "screen.h"
 
 void initScreen(){
 
@@ -76,48 +66,5 @@ void clearScreen(Color c){
 void clearScreen(){
 	Color c = {.red = 0, .green = 0, .blue = 0};
 	clearScreen(c);
-
-}
-void initSound(){
-///dev/ttyPA1
-	soundDeviceID = open("/dev/dsp",O_RDWR | O_NONBLOCK);
-
-	if(soundDeviceID < 0)
-	{
-		printf("Didnt manage to open sound device.");
-		exit(0);
-	}
-		;  // handle error
-}
-void closeSound(){
-	close(soundDeviceID);
-
-}
-void writeSoundValue(unsigned int value){
-	char data = value%256;
-	ssize_t written = write(soundDeviceID, &data,1);
-	if(written >= 0)
-		;  // handle successful write (which might be a partial write!)
-	else if(errno == EWOULDBLOCK)
-		printf("Error writing");
-	else printf("Error writing");
-}
-
-
-int main(){
-	initScreen();
-	initSound();
-	clearScreen();
-	printf("Screen (%dx%d).\n",SCREENWIDTH, SCREENHEIGHT);
-	printf("Blocks (%dx%d).\n",W_BLOCKS, H_BLOCKS);
-	printf("Block size (%dx%d).\n",BLOCK_WIDTH, BLOCK_HEIGHT);
-	for (int i = 0; i < H_BLOCKS; i++)
-		setBlock(i,i,White);
-	unsigned int c = 0;
-	while(1)
-		writeSoundValue(c++%255);
-		
-	closeScreen();
-	closeSound();
 
 }
