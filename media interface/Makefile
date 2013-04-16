@@ -1,14 +1,15 @@
 
-HOSTIP = 129.241.102.246
+HOSTIP = 129.241.103.209
+MAKE = avr32-linux-gcc
 
 all: main
 
 %.o: %.c
-	gcc -std=c99  -o $@ -c $< -lm
+	$(MAKE) -std=c99  -o $@ -c $< 
 
 
 main: screen.o sound.o main.o 
-	gcc -std=c99 -O3 -g -o main $^
+	$(MAKE) -std=c99 -O3 -g -o main $^
 
 
 run: main

@@ -1,9 +1,10 @@
 
-#include "sound.h"
+int soundDeviceID = -1;
 
+#include "sound.h"
 void initSound(){
 ///dev/ttyPA1
-	soundDeviceID = open("/dev/dsp",O_RDWR | O_NONBLOCK);
+	soundDeviceID = open("/dev/dsp",O_WRONLY );
 
 	if(soundDeviceID < 0)
 	{
@@ -16,9 +17,8 @@ void closeSound(){
 	close(soundDeviceID);
 
 }
-void writeSoundValue(unsigned int value){
-	char data = value%256;
-	ssize_t written = write(soundDeviceID, &data,1);
+void writeSoundValue(char *buffer, unsigned int length){
+	ssize_t written = write(soundDeviceID, buffer,length);
 	if(written >= 0)
 		;  // handle successful write (which might be a partial write!)
 	else if(errno == EWOULDBLOCK)

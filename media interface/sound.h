@@ -14,11 +14,11 @@
 #include <string.h>
 #include <linux/soundcard.h>
 
-int soundDeviceID = -1;
+extern int soundDeviceID;
 
 void initSound();
 void closeSound();
 
-void writeSoundValue(unsigned int value);
+void writeSoundValue(char *buffer, unsigned int length);
 
 #endif
