@@ -67,6 +67,14 @@ static int __init driver_init (void) {
     return result;
   }
 
+  /* Allocating memory for the buffer */
+  memory_buffer = kmalloc(1, GFP_KERNEL); 
+  if (!memory_buffer) { 
+    result = -ENOMEM;
+    memory_exit(); 
+    return result;
+  } 
+  memset(memory_buffer, 0, 1);
 
   /* be om tilgang til I/O-porter */
 
@@ -108,8 +116,16 @@ else{
 /* exit-funksjon (kalles når modul fjernes fra systemet) */
 
 static void __exit driver_exit (void) {
-  printk("<1> driver_exit\n");
+   /* Freeing the major number */
   unregister_chrdev(major, "STK1000_LEDBUTTON_DRIVER");
+
+  /* Freeing buffer memory */
+  if (memory_buffer) {
+    kfree(memory_buffer);
+  }
+
+  printk("<1> driver_exit\n");
+  
 }
 
 /*****************************************************************************/
@@ -131,7 +147,16 @@ static int driver_release (struct inode *inode, struct file *filp) {
 static ssize_t driver_read (struct file *filp, char __user *buff,
               size_t count, loff_t *offp) {
   printk("<1> driver_read\n");
+  /* Transfering data to user space */ 
+  copy_to_user(buf,memory_buffer,1);
 
+  /* Changing reading position as best suits */ 
+  if (*f_pos == 0) { 
+    *f_pos+=1; 
+    return 1; 
+  } else { 
+    return 0; 
+  }
 /*
 //Limits to only first 8 bits from IOB
   int button = ((int)piob->isr)%256;
