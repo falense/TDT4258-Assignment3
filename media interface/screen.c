@@ -1,6 +1,13 @@
 
 #include "screen.h"
 
+
+
+int screenDeviceID = -1;
+
+const unsigned int BLOCK_WIDTH = SCREENWIDTH/H_BLOCKS;
+const unsigned int BLOCK_HEIGHT = SCREENHEIGHT/W_BLOCKS;
+
 void initScreen(){
 
 	 screenDeviceID = open("/dev/fb0",O_RDWR | O_NONBLOCK);
@@ -63,7 +70,7 @@ void clearScreen(Color c){
 		for(int j = 0; j < SCREENWIDTH; j++)
 			setPixel(i,j,c);
 }
-void clearScreen(){
+void clearScreenB(){
 	Color c = {.red = 0, .green = 0, .blue = 0};
 	clearScreen(c);
 
