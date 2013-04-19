@@ -41,8 +41,11 @@ static struct file_operations driver_fops = {
 /* Global variables of the driver */
 /* Major number */
 int major = 252;
+
 /* Buffer to store data */
 char *memory_buffer;
+//char *button_buffer;
+//char *led_buffer;
 
 
 /*****************************************************************************/
@@ -67,16 +70,38 @@ static int __init driver_init (void) {
     return result;
   }
 
+
   /* Allocating memory for the buffer */
   memory_buffer = kmalloc(1, GFP_KERNEL); 
   if (!memory_buffer) { 
     result = -ENOMEM;
-    memory_exit(); 
+    driver_exit(); 
     return result;
   } 
   memset(memory_buffer, 0, 1);
 
+  /*
+  button_buffer = kmalloc(1, GFP_KERNEL); 
+  if (!button_buffer) { 
+    result = -ENOMEM;
+    driver_exit(); 
+    return result;
+  } 
+  memset(button_buffer, 0, 1);
+  
+  led_buffer = kmalloc(1, GFP_KERNEL); 
+  if (!led_buffer) { 
+    result = -ENOMEM;
+    driver_exit(); 
+    return result;
+  } 
+  memset(led_buffer, 0, 1);
+  */
+
+
   /* be om tilgang til I/O-porter */
+
+
 
 
   /*
@@ -108,6 +133,7 @@ else{
 	//Setup leds
 	pioc->per = 0xff;
 	pioc->oer = 0xff;
+
   /* registrere device i systemet (må gjøres når alt annet er initialisert) */
 
   return 0;
@@ -124,6 +150,20 @@ static void __exit driver_exit (void) {
     kfree(memory_buffer);
   }
 
+  /*
+  if (button_buffer) {
+    kfree(button_buffer);
+  }
+
+  if (led_buffer) {
+    kfree(led_buffer);
+  }
+
+
+
+  */
+
+
   printk("<1> driver_exit\n");
   
 }
@@ -133,13 +173,15 @@ static void __exit driver_exit (void) {
 
 static int driver_open (struct inode *inode, struct file *filp) {
   
-  return 0;
+  printk("<1> driver_open\n");
+  return 0;   /* Success */
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int driver_release (struct inode *inode, struct file *filp) {
-  return 0;
+  printk("<1> driver_release\n");
+  return 0; /* Success */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -147,22 +189,29 @@ static int driver_release (struct inode *inode, struct file *filp) {
 static ssize_t driver_read (struct file *filp, char __user *buff,
               size_t count, loff_t *offp) {
   printk("<1> driver_read\n");
+  
   /* Transfering data to user space */ 
-  copy_to_user(buf,memory_buffer,1);
+  copy_to_user(buff,memory_buffer,1);
 
-  /* Changing reading position as best suits */ 
+
+  /*
+  //Limits to only first 8 bits from IOB
+  int buttons_pressed = ((int)piob->isr)%256;
+  buttons_pressed = buttons_pressed & ~(((int)piob->pdsr)%256);
+  memset(button_buffer, (char) button_pressed, 1);
+  copy_to_user(buff,button_buffer,1);
+  */
+
+
+  /* Changing reading position. If one byte is read, 0 is returned to indicate
+    that the end of file has been read (this driver only transfers one byte) */
   if (*f_pos == 0) { 
     *f_pos+=1; 
     return 1; 
-  } else { 
+  } 
+  else { 
     return 0; 
   }
-/*
-//Limits to only first 8 bits from IOB
-  int button = ((int)piob->isr)%256;
-  button = button & ~(((int)piob->pdsr)%256);
-  */
-  return 0;
 
 }
 
@@ -170,6 +219,21 @@ static ssize_t driver_read (struct file *filp, char __user *buff,
 
 static ssize_t driver_write (struct file *filp, const char __user *buff,
                size_t count, loff_t *offp) {
+
+  printk("<1> driver_write\n");
+  if(count > 1){
+    count = 1;
+    printk("<1> This driver transfers maximum one byte\n");
+  }
+
+  copy_from_user(memory_buffer,buff,count);
+
+  //copy_from_user(led_buffer,buff,count);
+
+
+  return 1;
+  
+
   return 0;
 }
 
