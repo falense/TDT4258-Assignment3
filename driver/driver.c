@@ -40,7 +40,7 @@ static struct file_operations driver_fops = {
 
 /* Global variables of the driver */
 /* Major number */
-int major = 252;
+int major;
 
 /* Buffer to store data */
 char *memory_buffer;
@@ -62,14 +62,8 @@ void button_isr(void) {
 static int __init driver_init (void) {
   
   printk("<1> driver_init\n");
-/* allokere device-nummer */
-  /* Registering device */
-  int result = register_chrdev(major, "STK1000_LEDBUTTON_DRIVER", &driver_fops);
-  if (result < 0) {
-    printk("<1>memory: cannot obtain major number %d\n", major);
-    return result;
-  }
-
+  /* allokere device-nummer */
+  major = 252;
 
   /* Allocating memory for the buffer */
   memory_buffer = kmalloc(1, GFP_KERNEL); 
@@ -101,8 +95,48 @@ static int __init driver_init (void) {
 
   /* be om tilgang til I/O-porter */
 
+  /* buttons */
+  per_res = check_region(piob->per, 1);
+  puer_res = check_region(piob->puer, 1);
+  ier_res = check_region(piob->ier, 1);
 
+  if(per_res){
+    printk("<1>buttons: cannot reserve piob->per\n"); 
+    driver_exit();
+    return per_res;
+  }
+  if(puer_res){
+    printk("<1>buttons: cannot reserve piob->puer\n"); 
+    driver_exit();
+    return puer_res;
+  }
+  if(ier_res){
+    printk("<1>buttons: cannot reserve piob->ier\n"); 
+    driver_exit();
+    return ier_res;
+  }
 
+  request_region(piob->per, 1, "STK1000_LEDBUTTON_DRIVER");
+  request_region(piob->puer, 1, "STK1000_LEDBUTTON_DRIVER");
+  request_region(piob->ier, 1, "STK1000_LEDBUTTON_DRIVER");
+
+  /* leds */
+  perLED_res = check_region(pioc->per, 1);
+  oer_res = check_region(pioc->oer, 1);
+
+  if(perLED_res){
+    printk("<1>leds: cannot reserve pioc->per\n"); 
+    driver_exit();
+    return perLED_res;
+  }
+  if(oer_res){
+    printk("<1>leds: cannot reserve pioc->oer\n"); 
+    driver_exit();
+    return oer_res;
+  }
+
+  request_region(pioc->per, 1, "STK1000_LEDBUTTON_DRIVER");
+  request_region(pioc->oer, 1, "STK1000_LEDBUTTON_DRIVER");
 
   /*
  dev_t dev;
@@ -135,6 +169,11 @@ else{
 	pioc->oer = 0xff;
 
   /* registrere device i systemet (må gjøres når alt annet er initialisert) */
+  int result = register_chrdev(major, "STK1000_LEDBUTTON_DRIVER", &driver_fops);
+  if (result < 0) {
+    printk("<1>memory: cannot obtain major number %d\n", major);
+    return result;
+  }
 
   return 0;
 }
@@ -158,10 +197,26 @@ static void __exit driver_exit (void) {
   if (led_buffer) {
     kfree(led_buffer);
   }
-
-
-
   */
+
+  // buttons
+  if(!per_res){
+    release_region(piob->per,1);
+  }
+  if(!puer_res){
+    release_region(piob->puer,1);
+  }
+  if(!ier_res){
+    release_region(piob->ier,1);
+  }
+
+  /* leds */
+  if(!perLED_res){
+    release_region(pioc->per,1);
+  }
+  if(!oer_res){
+    release_region(pioc->oer,1);
+  }
 
 
   printk("<1> driver_exit\n");
@@ -228,9 +283,11 @@ static ssize_t driver_write (struct file *filp, const char __user *buff,
 
   copy_from_user(memory_buffer,buff,count);
 
+  /*
   //copy_from_user(led_buffer,buff,count);
-
-
+  pioc->sodr = led_buffer;   //Turn on the leds 
+  pioc->codr = ~led_buffer; //Turns of the rest, hence the negation.
+  */
   return 1;
   
 

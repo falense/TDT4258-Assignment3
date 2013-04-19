@@ -24,8 +24,13 @@ endif
 clean:
 	rm -rf *.o *.ko .*.cmd *.mod.* .tmp*  Module.symvers modules.order Module.symvers modules.order
 
+test:
+	gcc -Wall -m32 test_driver.c
+run_test:
+	./a.out
+
 HOSTIP = 129.241.103.212
 
-upload: default
+upload: default test
 	scp ./* root@$(HOSTIP):/game/driver
 	scp ./driver.ko root@$(HOSTIP):/dev
