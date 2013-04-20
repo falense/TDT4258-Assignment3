@@ -16,7 +16,7 @@ lsmod
 cat /proc/devices   -> finn driveren der, major nummer står der
 mknod driver c <major> 0   
 
-insmod dev/driver.ko && mknod dev/driver c 252 0   
+insmod driver.ko && mknod driver c 252 0   
 echo -n b > dev/driver
 
 
