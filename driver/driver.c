@@ -13,8 +13,11 @@
 #include <linux/ioport.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
+#include <linux/slab.h> /* kmalloc() */
 
 #include "ap7000.h"
+
+
 
 /* prototyper */
 
@@ -42,10 +45,15 @@ static struct file_operations driver_fops = {
 /* Major number */
 int major;
 
+int per_res, puer_res, ier_res, perLED_res, oer_res;
+
+
 /* Buffer to store data */
 char *memory_buffer;
-//char *button_buffer;
-//char *led_buffer;
+char *button_buffer;
+char *led_buffer;
+
+
 
 
 /*****************************************************************************/
@@ -65,37 +73,35 @@ static int __init driver_init (void) {
   /* allokere device-nummer */
   major = 252;
 
-  /* Allocating memory for the buffer */
+  /* Allocating memory for the buffers */
   memory_buffer = kmalloc(1, GFP_KERNEL); 
   if (!memory_buffer) { 
-    result = -ENOMEM;
     driver_exit(); 
-    return result;
+    return -ENOMEM;
   } 
-  memset(memory_buffer, 0, 1);
+  memset(memory_buffer, 'a', 1);
 
-  /*
+  
   button_buffer = kmalloc(1, GFP_KERNEL); 
   if (!button_buffer) { 
-    result = -ENOMEM;
     driver_exit(); 
-    return result;
+    return -ENOMEM;
   } 
   memset(button_buffer, 0, 1);
   
   led_buffer = kmalloc(1, GFP_KERNEL); 
   if (!led_buffer) { 
-    result = -ENOMEM;
     driver_exit(); 
-    return result;
+    return -ENOMEM;
   } 
   memset(led_buffer, 0, 1);
-  */
 
 
   /* be om tilgang til I/O-porter */
 
   /* buttons */
+  
+  /*
   per_res = check_region(piob->per, 1);
   puer_res = check_region(piob->puer, 1);
   ier_res = check_region(piob->ier, 1);
@@ -115,12 +121,14 @@ static int __init driver_init (void) {
     driver_exit();
     return ier_res;
   }
+  */
 
   request_region(piob->per, 1, "STK1000_LEDBUTTON_DRIVER");
   request_region(piob->puer, 1, "STK1000_LEDBUTTON_DRIVER");
   request_region(piob->ier, 1, "STK1000_LEDBUTTON_DRIVER");
 
-  /* leds */
+  /*
+  //leds 
   perLED_res = check_region(pioc->per, 1);
   oer_res = check_region(pioc->oer, 1);
 
@@ -134,10 +142,12 @@ static int __init driver_init (void) {
     driver_exit();
     return oer_res;
   }
+  */
 
   request_region(pioc->per, 1, "STK1000_LEDBUTTON_DRIVER");
   request_region(pioc->oer, 1, "STK1000_LEDBUTTON_DRIVER");
-
+  
+ 
   /*
  dev_t dev;
 
@@ -146,7 +156,7 @@ static int __init driver_init (void) {
   int piob_check = check_region((int)&AVR32_PIOB,1);
   int pioc_check = check_region((int)&AVR32_PIOC,1);
   if (piob_check && pioc_check){
-  	printk(KERN_INFO "Diddnt get the regions we wanted.");
+    printk(KERN_INFO "Diddnt get the regions we wanted.");
   }
 
 else{
@@ -156,20 +166,26 @@ else{
 }
 */
   
-	
+  
 
   /* initialisere PIO-maskinvaren (som i øving 2) */
-	 //Setup buttons
-	//register_interrupt( button_isr, AVR32_PIOB_IRQ/32, AVR32_PIOB_IRQ % 32, BUTTONS_INT_LEVEL);
-	piob->per = 0xff;
-	piob->puer= 0xff;
-	piob->ier = 0xff;
-	//Setup leds
-	pioc->per = 0xff;
-	pioc->oer = 0xff;
+
+  
+   //Setup buttons
+  //register_interrupt( button_isr, AVR32_PIOB_IRQ/32, AVR32_PIOB_IRQ % 32, BUTTONS_INT_LEVEL);
+  piob->per = 0xff;
+  piob->puer= 0xff;
+  piob->ier = 0xff;
+  //Setup leds
+  pioc->per = 0xff;
+  pioc->oer = 0xff;
+  
+
+
 
   /* registrere device i systemet (må gjøres når alt annet er initialisert) */
-  int result = register_chrdev(major, "STK1000_LEDBUTTON_DRIVER", &driver_fops);
+  int result;
+  result = register_chrdev(major, "STK1000_LEDBUTTON_DRIVER", &driver_fops);
   if (result < 0) {
     printk("<1>memory: cannot obtain major number %d\n", major);
     return result;
@@ -189,7 +205,7 @@ static void __exit driver_exit (void) {
     kfree(memory_buffer);
   }
 
-  /*
+  
   if (button_buffer) {
     kfree(button_buffer);
   }
@@ -197,8 +213,9 @@ static void __exit driver_exit (void) {
   if (led_buffer) {
     kfree(led_buffer);
   }
-  */
+  
 
+/*
   // buttons
   if(!per_res){
     release_region(piob->per,1);
@@ -210,14 +227,14 @@ static void __exit driver_exit (void) {
     release_region(piob->ier,1);
   }
 
-  /* leds */
+  //leds 
   if(!perLED_res){
     release_region(pioc->per,1);
   }
   if(!oer_res){
     release_region(pioc->oer,1);
   }
-
+  */
 
   printk("<1> driver_exit\n");
   
@@ -260,8 +277,8 @@ static ssize_t driver_read (struct file *filp, char __user *buff,
 
   /* Changing reading position. If one byte is read, 0 is returned to indicate
     that the end of file has been read (this driver only transfers one byte) */
-  if (*f_pos == 0) { 
-    *f_pos+=1; 
+  if (*offp == 0) { 
+    *offp+=1; 
     return 1; 
   } 
   else { 
@@ -281,13 +298,18 @@ static ssize_t driver_write (struct file *filp, const char __user *buff,
     printk("<1> This driver transfers maximum one byte\n");
   }
 
-  copy_from_user(memory_buffer,buff,count);
+  copy_from_user(led_buffer,buff,count);
 
-  /*
+  //*led_buffer = 0x0f;
+  int integer = (int) (*led_buffer);
+  printk("<1> setting 0x%d on the leds!\n", integer);
+  printk("<1> setting 0x%x on the leds!\n", integer);
   //copy_from_user(led_buffer,buff,count);
-  pioc->sodr = led_buffer;   //Turn on the leds 
-  pioc->codr = ~led_buffer; //Turns of the rest, hence the negation.
-  */
+  pioc->sodr = integer;   //Turn on the leds 
+  pioc->codr = ~integer; //Turns off the rest, hence the negation.
+  
+ 
+
   return 1;
   
 

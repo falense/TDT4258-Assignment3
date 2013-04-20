@@ -1,9 +1,9 @@
-#include <stdio.h>
+#include "stdio.h"
 
 
 int main(int argc, char *argv[]){
 	//char *path = argv[0];
-	FILE * led_buttons_driver = fopen("/dev/driver", "w");
+	FILE * led_buttons_driver = fopen("driver", "w");
 
 	/* to turn on a LED */
 	unsigned char byte = 0xff;

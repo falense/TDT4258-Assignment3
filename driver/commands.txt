@@ -14,7 +14,15 @@ ifconfig
 insmod driver.ko
 lsmod
 cat /proc/devices   -> finn driveren der, major nummer står der
-mknod driver c <major> 0   -> trenger ikke bruke den når hardcoder nummeret i programmet
+mknod driver c <major> 0   
+
+insmod dev/driver.ko && mknod dev/driver c 252 0   
+echo -n b > dev/driver
 
 
+scp andreul@login.stud.ntnu.no:/home/shomeb/a/andreul/test.txt ./
+
+
+
+mknod
 rmmod driver && insmod driver.ko
