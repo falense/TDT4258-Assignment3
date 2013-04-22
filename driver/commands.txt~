@@ -19,9 +19,7 @@ mknod driver c <major> 0
   
 echo -n b > driver
 
-wget http://folk.ntnu.no/andreul/driver.ko 
-
-insmod driver.ko && mknod driver c 252 0 
+wget http://folk.ntnu.no/andreul/driver.ko && insmod driver.ko && mknod driver c 252 0 
 
 
 scp andreul@login.stud.ntnu.no:/home/shomeb/a/andreul/test.txt ./
@@ -30,6 +28,3 @@ scp andreul@login.stud.ntnu.no:/home/shomeb/a/andreul/test.txt ./
 
 mknod
 rmmod driver && insmod driver.ko
-
-6c6b6a69
-0110 1100 0110 1011 0110 1010 0110 1001

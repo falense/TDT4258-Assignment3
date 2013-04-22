@@ -82,6 +82,13 @@ static int __init driver_init (void) {
   }
 
   
+  button_buffer = kmalloc(1, GFP_KERNEL); 
+  if (!button_buffer) { 
+    driver_exit(); 
+    return -ENOMEM;
+  } 
+  memset(button_buffer, 0, 1);
+  
   led_buffer = kmalloc(1, GFP_KERNEL); 
   if (!led_buffer) { 
     driver_exit(); 
@@ -89,13 +96,30 @@ static int __init driver_init (void) {
   } 
   memset(led_buffer, 0, 1);
 
+  /*
+  per_res = check_region(piob->per, 1);
+
+  if(per_res){
+    printk("<1>buttons: cannot reserve piob->per\n"); 
+    driver_exit();
+    return per_res;
+  }
+  */
 
   request_region(piob, pioc-piob, DEVICE_NAME);
-  
+  /*
   piob->per = 0xffffffff;
-  piob->oer = 0xffffff00;
+  piob->oer = 0xfffffff00;
   piob->codr = 0xffffff00;
-  piob->puer = 0x000000ff;
+  piob->puer = 0x000000ff;*/
+
+  piob->per = 0xffffffff;
+  piob->oer = 0x000000ff;
+  piob->codr = 0x000000ff;
+  piob->puer = 0xffffff00;
+
+  
+
 
   return 0;
 }
@@ -108,10 +132,36 @@ static void __exit driver_exit (void) {
 
   /* Freeing buffer memory */
 
+  
+  if (button_buffer) {
+    kfree(button_buffer);
+  }
+
   if (led_buffer) {
     kfree(led_buffer);
   }
   
+
+/*
+  // buttons
+  if(!per_res){
+    release_region(piob->per,1);
+  }
+  if(!puer_res){
+    release_region(piob->puer,1);
+  }
+  if(!ier_res){
+    release_region(piob->ier,1);
+  }
+
+  //leds 
+  if(!perLED_res){
+    release_region(pioc->per,1);
+  }
+  if(!oer_res){
+    release_region(pioc->oer,1);
+  }
+  */
 
   printk("<1> driver_exit\n");
   
@@ -122,14 +172,14 @@ static void __exit driver_exit (void) {
 
 static int driver_open (struct inode *inode, struct file *filp) {
   
- // printk("<1> driver_open\n");
+  printk("<1> driver_open\n");
   return 0;   /* Success */
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int driver_release (struct inode *inode, struct file *filp) {
- // printk("<1> driver_release\n");
+  printk("<1> driver_release\n");
   return 0; /* Success */
 }
 
@@ -137,12 +187,34 @@ static int driver_release (struct inode *inode, struct file *filp) {
 
 static ssize_t driver_read (struct file *filp, char __user *buff,
               size_t count, loff_t *offp) {
-
-  char buttons = piob->pdsr;
-  buttons = ~buttons;
-  copy_to_user(buff,&buttons,1);
+  printk("<1> driver_read\n");
   
-  return 1;
+  /* Transfering data to user space */ 
+//  copy_to_user(buff,memory_buffer,1);
+
+
+  /*
+  //Limits to only first 8 bits from IOB
+  int buttons_pressed = ((int)piob->isr)%256;
+  buttons_pressed = buttons_pressed & ~(((int)piob->pdsr)%256);
+  memset(button_buffer, (char) button_pressed, 1);
+  copy_to_user(buff,button_buffer,1);
+  */
+/*
+  printk("<1> driver_read\n");
+  if(count > 1){
+    count = 1;
+    printk("<1> This driver transfers maximum one byte\n");
+  }*/
+  //char buttons = piob->pdsr
+  //copy_to_user(piob->pdsr,buff,1);
+
+
+
+
+  /* Changing reading position. If one byte is read, 0 is returned to indicate
+    that the end of file has been read (this driver only transfers one byte) */
+  return 0;
 
 }
 
@@ -151,48 +223,17 @@ static ssize_t driver_read (struct file *filp, char __user *buff,
 static ssize_t driver_write (struct file *filp, const char __user *buff,
                size_t count, loff_t *offp) {
 
- // printk("<1> driver_write\n");
-
-  copy_from_user(led_buffer,buff,1);
-  //printk("<1> Value written %d\n",led_buffer);
-
-  piob->codr = 0xffffff00;
-  unsigned int ledmapping = 0;
-  char usrled = led_buffer[0];
-  //Led 0
-  if ((usrled & 0x01) > 0){
-    ledmapping = ledmapping | 0x00000100;
-  }
-  //Led 1
-  if ((usrled & 0x02) > 0){
-    ledmapping = ledmapping | 0x00000200;
-  }
-  //Led 2
-  if ((usrled & 0x04) > 0){
-    ledmapping = ledmapping | 0x00000400;
-  }
-  //Led 3
-  if ((usrled & 0x08) > 0){
-    ledmapping = ledmapping | 0x00002000;
-  }
-  //Led 4
-  if ((usrled & 0x10) > 0){
-    ledmapping = ledmapping | 0x00004000;
-  }
-  //Led 5
-  if ((usrled & 0x20) > 0){
-    ledmapping = ledmapping | 0x00008000;
-  }
-  //Led 6
-  if ((usrled & 0x40) > 0){
-    ledmapping = ledmapping | 0x00010000;
-  }
-  //Led 7
-  if ((usrled & 0x80) > 0){
-    ledmapping = ledmapping | 0x40000000;
+  printk("<1> driver_write\n");
+  if(count > 1){
+    count = 1;
+    printk("<1> This driver transfers maximum one byte\n");
   }
 
-  piob->sodr = ledmapping;// *led_buffer;//(char)(integer%256);
+  copy_from_user(led_buffer,buff,count);
+  printk("<1> Value written %d\n",led_buffer);
+
+  piob->codr = 0xffffffff;
+  piob->sodr =  *led_buffer;//(char)(integer%256);
   
 
   return 1;
