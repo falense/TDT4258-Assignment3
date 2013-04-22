@@ -13,6 +13,7 @@
 
 #include "sound.h"
 #include "screen.h"
+#include "ledbuttons.h"
 
 Block board[H_BLOCKS][W_BLOCKS];
 
@@ -50,8 +51,8 @@ void fillBoard(){
 		board[x][y] = Black;
 	}
 
-	int x = rand()%H_BLOCKS;
-	int y = rand()%W_BLOCKS;
+	int x = (rand()%(H_BLOCKS-2))+1;
+	int y = (rand()%(W_BLOCKS-2))+1;
 	playerPos.x = x;
 	playerPos.y = y;
 	board[x][y] = Yellow;
@@ -101,18 +102,22 @@ void playerStep(){
 int main(){
 	initScreen();
 	initSound();
+	initLedButtons();
 	lcdTest();
 	while(1){
 		fillBoard();
 		printBoard();
 		
 		for (int i = 0; i < 100; i++){
+			setLeds((char)i);
 			setFrequency(120*(i%20));
 			playerStep();
 			printBoard();
 			playSounds();
+			if (readButtons() & 0x01 > 0) break;
 		}
 	}
+	closeLedButtons();
 	closeScreen();
 	closeSound();
 
