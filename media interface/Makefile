@@ -8,7 +8,7 @@ all: main
 	$(MAKE) -std=c99  -o $@ -c $< 
 
 
-main: screen.o sound.o main.o 
+main: screen.o sound.o ledbuttons.o main.o 
 	$(MAKE) -std=c99 -O3 -g -o main $^
 
 

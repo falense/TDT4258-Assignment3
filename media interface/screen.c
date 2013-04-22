@@ -15,6 +15,11 @@ unsigned int smartUpdateMaxX = 0;
 const unsigned int BLOCK_WIDTH = SCREENWIDTH/W_BLOCKS;
 const unsigned int BLOCK_HEIGHT = SCREENHEIGHT/H_BLOCKS;
 void refreshScreen(char*buffer){
+
+/*
+	lseek(screenDeviceID, 0, SEEK_SET);
+	write(screenDeviceID, buffer,SCREENWIDTH*SCREENHEIGHT*3);
+	return;*/
 	pixelsChanged = 0;	
 
 	unsigned int smartUpdateDiffX = smartUpdateMaxX -smartUpdateMinX;
