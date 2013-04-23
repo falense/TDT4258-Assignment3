@@ -10,8 +10,8 @@ run: all
 
 testbmp: testbmp.o qdbmp.o
 	gcc -std=c99   -o bmptest $^
-runbmptest: testbmp
-	./bmptest test.bmp test2.bmp
+runtestbmp: testbmp
+	./bmptest ../resources/images/test.bmp test2.bmp
 
-testall: runbmptest
+testall: runtestbmp
 
