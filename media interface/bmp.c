@@ -16,8 +16,6 @@ struct Bitmap{
 	int width;
 	int height;
 	char *pixels;
-	unsigned int fileSize;
-	unsigned int pixelArrayOffset;
 };
 typedef struct Bitmap Bitmap;
 

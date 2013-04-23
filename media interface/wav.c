@@ -9,15 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <linux/soundcard.h>
+#include <sndfile.h>
 
 
 #include "sound.h"
 struct Sound{
-	int width;
-	int height;
-	char *pixels;
-	unsigned int fileSize;
-	unsigned int pixelArrayOffset;
+	int length;
+	int *samples;
 };
 typedef struct Sound Sound;
 
@@ -40,8 +38,51 @@ Sound* loadSound(char * filename){
 }
 
 
-
 int main(){
-	loadSound("test.wav");
+	Sound t;
+
+    int slen;
+    int i;
+    int result;
+    int NUM_SKIP = 40;
+    char *sample;
+    char tempfile[175];
+    FILE *wav;
+    FILE *outwav;
+    
+    
+    snprintf(tempfile, 175, "temp&#37;s", file);
+    wav = fopen(tempfile, "rb");
+    
+    fseek(wav, 0, SEEK_END);
+    slen = ftell(wav);
+    rewind(wav);
+    
+    sample = (char*) malloc (sizeof(char)*slen);
+    if(sample == NULL)
+    {
+        fputs("Memory error", stderr);
+        exit(1);
+    }
+    
+    result = fread(sample, 1, slen, wav);
+    if(result != slen)
+    {
+        fputs("Read error",stderr);
+        exit(2);
+    }
+    
+    fclose(wav);
+    char nsample[slen-NUM_SKIP];
+    for(i = slen-1; i >NUM_SKIP; i--)
+    {
+        nsample[i-NUM_SKIP] = sample[i];
+        //Some other stuff happens in here too, but it's irrelevant to gettting this all to work.
+        printf("nsample: %c", nsample[i]);
+        printf(" sample: %c\n", sample[i]);
+    }
+
+    
+    return 0;
 	
 }
