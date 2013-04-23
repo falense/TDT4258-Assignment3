@@ -18,7 +18,7 @@ clean:
 	rm -f *.prog *.o
 
 upload: all
-	scp ./*.prog root@$(HOSTIP):/game/media
+	scp ./*.prog root@$(HOSTIP):/game/
 
 testboard: testboard.o screen.o  sound.o  ledbuttons.o 
 	$(MAKE) -std=c99 -O3 -g -o testboard.prog $^
@@ -35,6 +35,15 @@ testscreen:  testscreen.o  screen.o
 testsound:  testsound.o  sound.o
 	$(MAKE) -std=c99 -O3 -g -o testsound.prog $^
 
-testall: testboard testbmp testledbuttons testscreen testsound
+
+testwav:  testwav.o  wav.o
+	$(MAKE) -std=c99 -O3 -g -o testwav.prog $^
+
+runtestwav: testwav
+	./testwav.prog
+
+runtestbmp: testbmp
+	./testbmp.prog
+testall: testboard testbmp testledbuttons testscreen testsound testwav
 
 
