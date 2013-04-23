@@ -92,7 +92,7 @@ void playSounds(){
 	char data[SOUNDBURSTWRITE+1];
 	for (int i = 0; i < SOUNDBURSTWRITE; i++)
 		data[i] = waveFunction();	
-	writeSoundValue((char*)&data,SOUNDBURSTWRITE);
+	writeSoundValue(&data,SOUNDBURSTWRITE);
 }
 void playSoundFile(char*filename){
 	Sound *t = loadSound(filename);

@@ -4,7 +4,7 @@
 Bitmap* loadBitmap(char * filename){
 
 	Bitmap * r = (Bitmap*)malloc(sizeof(Bitmap));
-	r->bmp  = BMP_ReadFile( "test.bmp" );
+	r->bmp  = BMP_ReadFile( filename );
 	BMP_CHECK_ERROR( stdout, -1 );
 
 	r->width = BMP_GetWidth(r->bmp);

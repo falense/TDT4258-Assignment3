@@ -13,6 +13,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <err.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/ioctl.h>
 
 typedef struct {
     char     chunk_id[4]; //4
@@ -42,6 +46,7 @@ void wavread(char *file_name,Sound * s);
 
 
 Sound* loadSound(char * filename);
+void finalizeSound(Sound* s);
 
-#endif WAV_HEADER
+#endif
 

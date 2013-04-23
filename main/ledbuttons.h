@@ -19,4 +19,5 @@ extern int ledButtonsDeviceID;
 void initLedButtons();
 void closeLedButtons();
 void setLeds(char leds);
+char readButtons();
 #endif

@@ -1,5 +1,9 @@
 //http://servv89pn0aj.sn.sourcedns.com/~gbpprorg/guerrilla.net/reference/dsp/prog_dsp.htm
 
+#ifndef LEDBUTTONS_HEADER
+#define LEDBUTTONS_HEADER
+
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -7,18 +11,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 
-#include "ledbuttons.h"
+extern int ledButtonsDeviceID;
 
-
-int main(){
-	initLedButtons();
-	while(1){
-		for (int i = 0; i < 100; i++){
-			setLeds((char)i);
-			if (readButtons() & 0x01 > 0) break;
-		}
-	}
-	closeLedButtons();
-}
+void initLedButtons();
+void closeLedButtons();
+void setLeds(char leds);
+#endif

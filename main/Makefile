@@ -6,7 +6,7 @@ MAKE = gcc
 all: main testall
 
 %.o: %.c
-	$(MAKE) -std=c99  -O3 -o  $@ -c $< 
+	$(MAKE) -std=c99  -g -O3 -o  $@ -c $< 
 main: screen.o sound.o ledbuttons.o main.o 
 	$(MAKE) -std=c99 -O3 -g -o main.prog $^
 
@@ -20,7 +20,7 @@ clean:
 upload: all
 	scp ./*.prog root@$(HOSTIP):/game/
 
-testboard: testboard.o screen.o  sound.o  ledbuttons.o 
+testboard: testboard.o screen.o  sound.o  ledbuttons.o wav.o bmp.o ./libs/qdbmp.o
 	$(MAKE) -std=c99 -O3 -g -o testboard.prog $^
 
 testbmp: testbmp.o  bmp.o ./libs/qdbmp.o
@@ -32,7 +32,7 @@ testledbuttons:  testledbuttons.o  ledbuttons.o
 testscreen:  testscreen.o  screen.o
 	$(MAKE) -std=c99 -O3 -g -o testscreen.prog $^
 
-testsound:  testsound.o  sound.o
+testsound:  testsound.o  sound.o wav.o
 	$(MAKE) -std=c99 -O3 -g -o testsound.prog $^
 
 

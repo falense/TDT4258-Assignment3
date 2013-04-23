@@ -38,7 +38,6 @@ void writeSoundValue(char *buffer, unsigned int length);
 #define SOUNDBURSTWRITE DSP_SAMPLERATE /8
 
 void playSounds();
-void playSoundFile();
 void setFrequency(double hertz);
 #endif
 

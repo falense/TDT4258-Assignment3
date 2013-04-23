@@ -55,3 +55,8 @@ Sound* loadSound(char * filename){
 	return t;
 }
 
+void finalizeSound(Sound * s){
+
+	free(s->samples);
+	free(s);
+}

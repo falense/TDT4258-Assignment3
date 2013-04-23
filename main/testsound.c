@@ -20,6 +20,7 @@ int main(){
 		for (int i = 0; i < 100; i++){
 			setFrequency(120*(i%20));
 		}
+	playSoundFile("./resources/sounds/success.wav");
 	}
 	closeSound();
 
