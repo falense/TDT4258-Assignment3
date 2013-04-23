@@ -1,0 +1,64 @@
+//http://en.wikipedia.org/wiki/BMP_file_format
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <linux/soundcard.h>
+
+#include "qdbmp.h"
+
+struct Color{
+	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
+
+};
+typedef struct Color Color ;
+
+struct Bitmap{
+	int width;
+	int height;
+	BMP* bmp;
+};
+typedef struct Bitmap Bitmap;
+
+Bitmap* loadBitmap(char * filename){
+
+	Bitmap * r = (Bitmap*)malloc(sizeof(Bitmap));
+	r->bmp  = BMP_ReadFile( "test.bmp" );
+	BMP_CHECK_ERROR( stdout, -1 );
+
+	r->width = BMP_GetWidth(r->bmp);
+	r->height = BMP_GetHeight(r->bmp);
+	
+}
+
+
+void finalizeBitmap(Bitmap * image){
+	BMP_Free( image->bmp );
+	free(image);
+}
+
+Color* getPixel(int x, int y, Bitmap * image){
+	Color * c;
+	c = (Color*)malloc(sizeof(Color));
+	BMP_GetPixelRGB( image->bmp, x, y, &c->red, &c->green, &c->blue );
+	return c;
+}
+
+int main(){
+	Bitmap * image = loadBitmap("test.bmp");
+
+	Color *c = getPixel(0,0,image);
+	printf("Red: %d\n",(int)c->red);
+	printf("Green: %d\n",(int)c->green);
+	printf("Blue: %d\n",(int)c->blue);
+	finalizeBitmap(image);
+	return 0;
+	
+}
