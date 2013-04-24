@@ -113,7 +113,7 @@ void playSoundFile(char*filename){
 	
 	int end = ((t->length/SOUNDBURSTWRITE)*SOUNDBURSTWRITE);
 	int rem = t->length-end;
-	printf("End: %d, Rem: %d\n",end,rem);
+	//printf("End: %d, Rem: %d\n",end,rem);
 	char * buffer = (char*)malloc(sizeof(char)*rem);
 	for (int j = 0; j < rem;j++){
 		buffer[j] = t->samples[end+j];

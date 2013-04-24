@@ -38,7 +38,7 @@ typedef struct {
 
 
 typedef struct{
-	int length;
+	uint32_t length;
 	char *samples;
 } Sound;
 

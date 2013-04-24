@@ -122,3 +122,6 @@ void playSoundFile(char*filename){
 	free(buffer);
 	finalizeSound(t);
 }
+void feedBuffer(){
+
+}

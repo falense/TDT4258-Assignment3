@@ -18,23 +18,6 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
-typedef struct {
-    char     chunk_id[4]; //4
-    uint32_t chunk_size; //8
-    char     format[4]; //12
-
-    char     fmtchunk_id[4]; //16
-    uint32_t fmtchunk_size; //20
-    uint16_t audio_format; //22
-    uint16_t num_channels; //24
-    uint32_t sample_rate; //28
-    uint32_t byte_rate; //32
-    uint16_t block_align; //34
-    uint16_t bps;	//36
-
-    char     datachunk_id[4]; //40
-    uint32_t datachunk_size; //44
-}WavHeader;
 
 
 typedef struct{

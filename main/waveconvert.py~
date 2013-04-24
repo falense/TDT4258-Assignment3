@@ -1,15 +1,20 @@
-import wave
+import wave, sys
 from struct import unpack, pack
+if (len(sys.argv) < 3):
+	print "usage python waveconvert.py inputfile outputfile"
+	exit(0)
 
-f = wave.open("./resources/sounds/success.wav","r")
+inputfile = sys.argv[1]
+outputfile = sys.argv[2]
+
+f = wave.open(inputfile,"r")
 
 print "Channels: ", f.getnchannels()
 print "Sample width: ", f.getsampwidth()
 print "Sample rate: ", f.getframerate()
 print "Sample count: ", f.getnframes()
-
 fout = open("out.dat","wb")
-fout.write(pack("<I",f.getnframes()))
+fout.write(pack(">I",int(f.getnframes())))
 print pack("<I",f.getnframes())
 d = pack("<I",f.getnframes())
 print unpack("<I",d)

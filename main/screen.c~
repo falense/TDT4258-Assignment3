@@ -89,7 +89,8 @@ void setPixel(unsigned int x, unsigned int y, Color c){
 void setBlock(unsigned int bx,unsigned int by, Block b){
 	int baseX = bx*BLOCK_WIDTH;
 	int baseY = by*BLOCK_HEIGHT;
-Color c;
+	Color c;
+	int simpleBlock = 1;
 	switch(b){
 		case Black:
 			c.red = 0;
@@ -116,19 +117,56 @@ Color c;
 			c.green = 255;
 			c.blue = 0;
 			break;
+		default:
+			simpleBlock = 0;
+			break;
 			
 
 	}
-	for (unsigned int i = 0; i < BLOCK_HEIGHT; i++){
-		for (unsigned int j = 0; j < BLOCK_WIDTH; j++){
-			setPixel(j+baseX,i+baseY,c);
+	if (simpleBlock){
+		for (unsigned int i = 0; i < BLOCK_WIDTH; i++){
+			for (unsigned int j = 0; j < BLOCK_HEIGHT; j++){
+				setPixel(i+baseX,j+baseY,c);
+			}
 		}
+	}
+	else{
+		Bitmap * image;
+		switch(b){
+			case Food:
+				image = loadBitmap("./resources/images/food.bmp")
+				break;
+			case Ghost1:
+				image = loadBitmap("./resources/images/ghost1.bmp")
+				break;
+			case Ghost2:
+				image = loadBitmap("./resources/images/ghost2.bmp")
+				break;
+			case Ghost3:
+				image = loadBitmap("./resources/images/ghost3.bmp")
+				break;
+			case Pacman:
+				image = loadBitmap("./resources/images/pacman.bmp")
+				break;
+		}
+		if (!image){
+			printf("No bitmap was loaded during block write\n");
+			return;
+		}
+		for (unsigned int i = 0; i < BLOCK_WIDTH; i++){
+			for (unsigned int j = 0; j < BLOCK_HEIGHT; j++){
+				c = getPixel(i,j,image);
+				setPixel(i+baseX,j+baseY,c);
+			}
+		}
+		
+		free(image);
 	}
 }
 
 void clearScreen(Color c){
-	for(int i = 0; i < SCREENHEIGHT; i++)
-		for(int j = 0; j < SCREENWIDTH; j++)
+	for(int i = 0; i < SCREENWIDTH; i++)
+		for(int j = 0; j < SCREENHEIGHT; j++)
 			setPixel(i,j,c);
 	refreshScreen(currentFrameBuffer);
 }

@@ -23,7 +23,7 @@ int main(){
 				int c = x*x;
 			}
 		}*/
-		playSoundFile("./resources/sounds/out.dat");
+		playSoundFile("./resources/sounds/bumpisong.dat");
 	}
 	closeSound();
 

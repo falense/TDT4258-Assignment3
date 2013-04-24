@@ -17,13 +17,13 @@
 int main(){
 	initSound();
 	while(1){
-		for (int i = 0; i < 100; i++){
+		/*for (int i = 0; i < 100; i++){
 			setFrequency(120*(i%20));
 			for (int x = 0; x < 300000; x++){
 				int c = x*x;
 			}
-		}
-		playSoundFile("./resources/sounds/out.dat");
+		}*/
+		playSoundFile("./resources/sounds/HansZimmer.dat");
 	}
 	closeSound();
 
