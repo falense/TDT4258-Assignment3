@@ -5,10 +5,12 @@
 
 int main(){
 	initLedButtons();
+	char buttonState;
 	while(1){
-		for (int i = 0; i < 100; i++){
-			setLeds((char)i);
-			if (readButtons() & 0x01 > 0) break;
+		char t = readButtons();
+		if (t != buttonState){
+			buttonState =t;
+			setLeds(buttonState);
 		}
 	}
 	closeLedButtons();

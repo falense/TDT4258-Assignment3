@@ -33,9 +33,9 @@ void closeSound();
 void writeSoundValue(char *buffer, unsigned int length);
 
 
-#define DSP_SAMPLERATE 16000
+#define DSP_SAMPLERATE 8000
 
-#define SOUNDBURSTWRITE DSP_SAMPLERATE /8
+#define SOUNDBURSTWRITE (DSP_SAMPLERATE /8)
 
 void playSounds();
 void playSoundFile();

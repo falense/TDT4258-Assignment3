@@ -1,7 +1,7 @@
 
 HOSTIP = 129.241.103.136
-MAKE = avr32-linux-gcc
-#MAKE = gcc
+#MAKE = avr32-linux-gcc
+MAKE = gcc
 
 all: main testall
 
@@ -36,7 +36,7 @@ testledbuttons:  testledbuttons.o  ledbuttons.o
 testscreen:  testscreen.o  screen.o
 	$(MAKE) -std=c99 -O3 -g -o testscreen.prog $^
 
-testscreen2:  testscreen2.o  screen.o bmp.o /libs/qdbmp.o
+testscreen2:  testscreen2.o  screen.o bmp.o ./libs/qdbmp.o
 	$(MAKE) -std=c99 -O3 -g -o testscreen2.prog $^
 
 testsound:  testsound.o  sound.o wav.o

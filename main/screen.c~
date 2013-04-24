@@ -27,7 +27,7 @@ void refreshScreen(char*buffer){
 
 
 
-	lseek(screenDeviceID, SCREENWIDTH*smartUpdateMinX*3, SEEK_SET);
+	lseek(screenDeviceID, SCREENWIDTH*smartUpdateMinY*3, SEEK_SET);
 	ssize_t written = write(screenDeviceID, buffer+SCREENWIDTH*smartUpdateMinY*3,lengthUpdate);
 	if(written >= 0)
 		;  // handle successful write (which might be a partial write!)

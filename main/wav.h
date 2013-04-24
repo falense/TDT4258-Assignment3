@@ -38,8 +38,8 @@ typedef struct {
 
 
 typedef struct{
-	int length;
-	int16_t *samples;
+	uint32_t length;
+	char *samples;
 } Sound;
 
 void wavread(char *file_name,Sound * s);

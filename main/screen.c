@@ -127,8 +127,8 @@ Color c;
 }
 
 void clearScreen(Color c){
-	for(int i = 0; i < SCREENHEIGHT; i++)
-		for(int j = 0; j < SCREENWIDTH; j++)
+	for(int i = 0; i < SCREENWIDTH; i++)
+		for(int j = 0; j < SCREENHEIGHT; j++)
 			setPixel(i,j,c);
 	refreshScreen(currentFrameBuffer);
 }

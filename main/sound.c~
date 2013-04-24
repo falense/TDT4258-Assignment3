@@ -11,8 +11,8 @@ void initSound(){
 		exit(0);
 	}
 		;  // handle error
-	int sampleRate = DSP_SAMPLERATE;
-	ioctl(soundDeviceID,SOUND_PCM_WRITE_RATE,&sampleRate);
+	//int sampleRate = DSP_SAMPLERATE;
+	//ioctl(soundDeviceID,SOUND_PCM_WRITE_RATE,&sampleRate);
 
 	channels = (SoundPlaying*)malloc(sizeof(SoundPlaying)*MAXSOUNDCOUNT);
 }
@@ -92,16 +92,33 @@ void playSounds(){
 	char data[SOUNDBURSTWRITE+1];
 	for (int i = 0; i < SOUNDBURSTWRITE; i++)
 		data[i] = waveFunction();	
-	writeSoundValue(&data,SOUNDBURSTWRITE);
+	writeSoundValue((char*)&data,SOUNDBURSTWRITE);
 }
 void playSoundFile(char*filename){
 	Sound *t = loadSound(filename);
-	
-	char * samples = (char*)malloc(sizeof(char)*t->length);
-	for (int i = 0; i < t->length; i++){
-		samples[i] = (char)t->samples[i];
+	for (int i = 0; i < t->length/SOUNDBURSTWRITE; i++){
+		
+		//if (length > t->length-i*SOUNDBURSTWRITE){
+		//	length = t->length-i*SOUNDBURSTWRITE;		
+		//}
+		printf("Start %d\n",i*SOUNDBURSTWRITE);
+		char * buffer = (char*)malloc(sizeof(char)*SOUNDBURSTWRITE);
+		int start = i*SOUNDBURSTWRITE;
+		for (int j = 0; j < SOUNDBURSTWRITE;j++){
+			buffer[j] = t->samples[start+j];
+		}	
+		writeSoundValue(buffer,SOUNDBURSTWRITE);
+		free(buffer);
 	}
-	writeSoundValue(samples,t->length);
 	
+	int end = ((t->length/SOUNDBURSTWRITE)*SOUNDBURSTWRITE);
+	int rem = t->length-end;
+	printf("End: %d, Rem: %d\n",end,rem);
+	char * buffer = (char*)malloc(sizeof(char)*rem);
+	for (int j = 0; j < rem;j++){
+		buffer[j] = t->samples[end+j];
+	}	
+	writeSoundValue(buffer,rem);
+	free(buffer);
 	finalizeSound(t);
 }
