@@ -3,20 +3,28 @@
 #include "wav.h"
 
 
-void wavread(char *file_name,Sound * s)
+void wavread(char *filename,Sound * s)
 {
+	printf("Reading: ");
+	printf(filename);
+	printf("\n");
 	int fd;
 	WavHeader *header;
-	if (!file_name) 
+	if (!filename) 
 		errx(1, "Filename not specified");
-	if ((fd = open(file_name, O_RDONLY)) < 1) 
+	if ((fd = open(filename, O_RDONLY)) < 1) 
 		errx(1, "Error opening file");
+	lseek(fd,0,SEEK_SET);
 	if (!header) 
-		header = (WavHeader*)malloc(sizeof(WavHeader));
+		header = (WavHeader*)malloc(sizeof(WavHeader));	
 	if (read(fd, header, sizeof(WavHeader)) < sizeof(WavHeader)) 
 		errx(1, "File broken: header");
+	for (int i = 0; i < 42; i++)
+		printf("%c ",((char*)header)[i]);
+	printf("\n");
 	if (strncmp(header->chunk_id, "RIFF", 4) || strncmp(header->format, "WAVE", 4)) 
 		errx(1, "Not a wav file");
+	printf("Audio format: %d\n",header->audio_format);
 	if (header->audio_format != 1) 
 		errx(1, "Only PCM encoding supported");
 

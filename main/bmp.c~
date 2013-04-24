@@ -9,7 +9,7 @@ Bitmap* loadBitmap(char * filename){
 
 	r->width = BMP_GetWidth(r->bmp);
 	r->height = BMP_GetHeight(r->bmp);
-	
+	return r;
 }
 
 

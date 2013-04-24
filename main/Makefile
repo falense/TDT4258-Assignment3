@@ -20,6 +20,10 @@ clean:
 upload: all
 	scp ./*.prog ./driver/driver.ko ./driver/insertDriver.sh root@$(HOSTIP):/game/
 
+uploadstatic:
+	scp ./resources/images/* root@$(HOSTIP):/game/resources/images/ 
+	scp ./resources/sounds/* root@$(HOSTIP):/game/resources/sounds/
+
 testboard: testboard.o screen.o  sound.o  ledbuttons.o wav.o bmp.o ./libs/qdbmp.o
 	$(MAKE) -std=c99 -O3 -g -o testboard.prog $^
 
@@ -31,6 +35,9 @@ testledbuttons:  testledbuttons.o  ledbuttons.o
 
 testscreen:  testscreen.o  screen.o
 	$(MAKE) -std=c99 -O3 -g -o testscreen.prog $^
+
+testscreen2:  testscreen2.o  screen.o bmp.o ./libs/qdbmp.o
+	$(MAKE) -std=c99 -O3 -g -o testscreen2.prog $^
 
 testsound:  testsound.o  sound.o wav.o
 	$(MAKE) -std=c99 -O3 -g -o testsound.prog $^
@@ -44,6 +51,6 @@ runtestwav: testwav
 
 runtestbmp: testbmp
 	./testbmp.prog
-testall: testboard testbmp testledbuttons testscreen testsound testwav
+testall: testboard testbmp testledbuttons testscreen testsound testwav testscreen2
 
 

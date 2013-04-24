@@ -13,7 +13,6 @@
 #include <stdlib.h>
 
 #include "./libs/qdbmp.h"
-#include "screen.h"
 
 typedef struct {
 	unsigned char red;
