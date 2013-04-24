@@ -19,11 +19,12 @@ void finalizeBitmap(Bitmap * image){
 }
 
 Color getPixel(unsigned int x,unsigned int y, Bitmap * image){
-	
 	Color  c = {.red = 0, .green = 0, .blue = 0};
 
 	if (x >= image->width || y >= image->height) return c;
 
 	BMP_GetPixelRGB( image->bmp, x, y, &c.red, &c.green, &c.blue );
+	//printf("%d,%d \n",x,y);
+	//printf("%d,%d,%d \n",c.red,c.green,c.blue);
 	return c;
 }

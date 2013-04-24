@@ -15,7 +15,7 @@
 #include "bmp.h"
 
 
-enum Block {White, Black, Blue, Red, Green,Yellow, Food,Ghost1,Ghost2,Ghost3,Pacman};
+enum Block {White, Black, Blue, Red, Green,Yellow, Food,Ghost1,Ghost2,Ghost3,Pacman,Rock,Ground};
 typedef enum Block Block;
 
 extern int screenDeviceID;

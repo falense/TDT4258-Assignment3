@@ -31,7 +31,7 @@ void lcdTest(){
 int main(){
 	initScreen();
 	lcdTest();
-	Bitmap * b = loadBitmap("./resources/images/pacman.bmp");
+	Bitmap * b = loadBitmap("./resources/images/test.bmp");
 	printf("Height: %d Width: %d\n",b->height, b->width);
 	int x,y;
 	for (x = 0; x < b->height; x++){

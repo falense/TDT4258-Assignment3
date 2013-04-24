@@ -22,7 +22,7 @@ Position playerPos;
 void fillBoard(){
 	for (int i = 0; i < W_BLOCKS; i++){
 		for(int j = 0; j < H_BLOCKS; j++){
-			board[i][j] = White;
+			board[i][j] = Ground;
 		}
 	}
 
@@ -32,17 +32,17 @@ void fillBoard(){
 		board[x][y] = Red;
 	}
 	for(int j = 0; j < H_BLOCKS; j++){
-		board[0][j] = Black;
-		board[W_BLOCKS-1][j] = Black;
+		board[0][j] = Rock;
+		board[W_BLOCKS-1][j] = Rock;
 	}
 	for (int i = 0; i < W_BLOCKS; i++){
-		board[i][0] = Black;
-		board[i][H_BLOCKS-1] = Black;
+		board[i][0] = Rock;
+		board[i][H_BLOCKS-1] = Rock;
 	}
 	for (int i = 0; i < H_BLOCKS*W_BLOCKS/4; i++){
 		int x = rand()%W_BLOCKS;
 		int y = rand()%H_BLOCKS;
-		board[x][y] = Black;
+		board[x][y] = Rock;
 	}
 
 	int x = (rand()%(W_BLOCKS-2))+1;
@@ -76,7 +76,7 @@ void playerStep(){
 	
 	int x = rand()%3-1;
 	int y = rand()%3-1;
-	while(board[playerPos.x+x][playerPos.y+y] == Black){
+	while(board[playerPos.x+x][playerPos.y+y] == Rock){
 		 x = rand()%3-1;
 		 y = rand()%3-1;
 		while(x == 0 && y == 0){
@@ -85,7 +85,7 @@ void playerStep(){
 		}
 		
 	}
-	board[playerPos.x][playerPos.y] = White;
+	board[playerPos.x][playerPos.y] = Ground;
 	board[playerPos.x+x][playerPos.y+y] = Pacman;
 	playerPos.x = playerPos.x+x;
 	playerPos.y = playerPos.y+y;
@@ -99,11 +99,10 @@ int main(){
 	while(1){
 		fillBoard();
 		printBoard();
-		//for (int i = 0; i < 100; i++){
+		for (int i = 0; i < 100; i++){
 			playerStep();
 			printBoard();
-		//}
-		break;
+		}
 	}
 	closeScreen();
 
