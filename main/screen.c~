@@ -68,7 +68,7 @@ void writeScreen(char* data, unsigned int start, unsigned int size){
 
 
 }
-void setPixel(unsigned int x, unsigned int y, Color* c){
+void setPixel(unsigned int x, unsigned int y, Color c){
 	if (x >= SCREENHEIGHT || y >= SCREENWIDTH ) return;
 	
 	if (x < smartUpdateMinX) smartUpdateMinX = x;
@@ -76,9 +76,9 @@ void setPixel(unsigned int x, unsigned int y, Color* c){
 
 	unsigned int index = 3*(x*SCREENWIDTH+y);
 	
-	currentFrameBuffer[index] = c->blue;
-	currentFrameBuffer[index+1] = c->green;
-	currentFrameBuffer[index+2] = c->red;
+	currentFrameBuffer[index] = c.blue;
+	currentFrameBuffer[index+1] = c.green;
+	currentFrameBuffer[index+2] = c.red;
 	pixelsChanged++;
 	
 }
@@ -120,7 +120,7 @@ Color c;
 	}
 	for (unsigned int i = 0; i < BLOCK_HEIGHT; i++){
 		for (unsigned int j = 0; j < BLOCK_WIDTH; j++){
-			setPixel(i+baseX,j+baseY,&c);
+			setPixel(i+baseX,j+baseY,c);
 		}
 	}
 }

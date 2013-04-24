@@ -68,17 +68,17 @@ void writeScreen(char* data, unsigned int start, unsigned int size){
 
 
 }
-void setPixel(unsigned int x, unsigned int y, Color* c){
-	if (x >= SCREENHEIGHT || y >= SCREENWIDTH ) return;
+void setPixel(unsigned int x, unsigned int y, Color c){
+	if (y >= SCREENHEIGHT || x >= SCREENWIDTH ) return;
 	
-	if (x < smartUpdateMinX) smartUpdateMinX = x;
-	if (x > smartUpdateMaxX) smartUpdateMaxX = x;
+	if (y < smartUpdateMinX) smartUpdateMinX = y;
+	if (y > smartUpdateMaxX) smartUpdateMaxX = y;
 
-	unsigned int index = 3*(x*SCREENWIDTH+y);
+	unsigned int index = 3*(y*SCREENWIDTH+x);
 	
-	currentFrameBuffer[index] = c->blue;
-	currentFrameBuffer[index+1] = c->green;
-	currentFrameBuffer[index+2] = c->red;
+	currentFrameBuffer[index] = c.blue;
+	currentFrameBuffer[index+1] = c.green;
+	currentFrameBuffer[index+2] = c.red;
 	pixelsChanged++;
 	
 }
@@ -120,7 +120,7 @@ Color c;
 	}
 	for (unsigned int i = 0; i < BLOCK_HEIGHT; i++){
 		for (unsigned int j = 0; j < BLOCK_WIDTH; j++){
-			setPixel(i+baseX,j+baseY,&c);
+			setPixel(i+baseX,j+baseY,c);
 		}
 	}
 }
@@ -128,7 +128,7 @@ Color c;
 void clearScreen(Color c){
 	for(int i = 0; i < SCREENHEIGHT; i++)
 		for(int j = 0; j < SCREENWIDTH; j++)
-			setPixel(i,j,&c);
+			setPixel(i,j,c);
 	refreshScreen(currentFrameBuffer);
 }
 void clearScreenB(){

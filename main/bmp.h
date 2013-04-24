@@ -29,6 +29,6 @@ typedef struct {
 
 Bitmap* loadBitmap(char * filename);
 void finalizeBitmap(Bitmap * image);
-Color* getPixel(int x, int y, Bitmap * image);
+Color getPixel(int x, int y, Bitmap * image);
 
 #endif

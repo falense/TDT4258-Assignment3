@@ -18,8 +18,8 @@ void finalizeBitmap(Bitmap * image){
 	free(image);
 }
 
-Color* getPixel(int x, int y, Bitmap * image){
-	Color  *c = (Color*)malloc(sizeof(Color));
-	BMP_GetPixelRGB( image->bmp, x, y, &c->red, &c->green, &c->blue );
+Color getPixel(int x, int y, Bitmap * image){
+	Color  c;
+	BMP_GetPixelRGB( image->bmp, x, y, &c.red, &c.green, &c.blue );
 	return c;
 }

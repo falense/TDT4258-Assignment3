@@ -38,7 +38,7 @@ extern char  *nextFrameBuffer;
 void initScreen();
 void closeScreen();
 void writeScreen(char* data, unsigned int start, unsigned int size);
-void setPixel(unsigned int x, unsigned int y, Color c);
+void setPixel(unsigned int x, unsigned int y, Color* c);
 void setBlock(unsigned int bx,unsigned int by, Block b);
 
 

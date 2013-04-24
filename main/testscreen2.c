@@ -34,18 +34,10 @@ int main(){
 	Bitmap * b = loadBitmap("./resources/images/test.bmp");
 	printf("Height: %d Width: %d\n",b->height, b->width);
 	int x,y;
-	for (x = 0; x < 10; x++){
-		for(y = 0; y < 10; y++){
-			Color *c = getPixel(x,y,b);
-			printf("Red %d Green %d Blue %d\n",c->red,c->green,c->blue);
-			free(c);
-		}
-	}
 	for (x = 0; x < b->height; x++){
 		for(y = 0; y < b->width; y++){
-			Color *c = getPixel(x,y,b);
+			Color c = getPixel(x,y,b);
 			setPixel(x,y,c);
-			free(c);
 		}
 	}
 		refreshScreen(currentFrameBuffer);
