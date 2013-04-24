@@ -1,13 +1,13 @@
 
-HOSTIP = 129.241.103.209
-#MAKE = avr32-linux-gcc
-MAKE = gcc
+HOSTIP = 129.241.103.136
+MAKE = avr32-linux-gcc
+#MAKE = gcc
 
 all: main testall
 
 %.o: %.c
 	$(MAKE) -std=c99  -g -O3 -o  $@ -c $< 
-main: screen.o sound.o ledbuttons.o main.o 
+main: screen.o sound.o ledbuttons.o wav.o main.o 
 	$(MAKE) -std=c99 -O3 -g -o main.prog $^
 
 run: main
@@ -18,7 +18,7 @@ clean:
 	rm -f *.prog *.o
 
 upload: all
-	scp ./*.prog root@$(HOSTIP):/game/
+	scp ./*.prog ./driver/driver.ko ./driver/insertDriver.sh root@$(HOSTIP):/game/
 
 testboard: testboard.o screen.o  sound.o  ledbuttons.o wav.o bmp.o ./libs/qdbmp.o
 	$(MAKE) -std=c99 -O3 -g -o testboard.prog $^
