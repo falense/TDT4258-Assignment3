@@ -9,152 +9,248 @@
 
  It will also instruct the screen framework to put display what it want.
  
- There should be a game loop that continously calls the render() function of
- screen.c, while checking other types of game logic.
- 
- Button interrupts or polling?
- 
- Either way, button presses should in some way manipulate the world.
- 
  */
 
-void testGame() {
+//Move the unit standing on the currentPos in the direction d
+
+void foodObtained(int x, int y) {
+
+    score+=FOOD_SCORE;
+    remainingFood--;
+    foodLocation[x][y] == '0';
+}
+
+void hitByGhost() {
+
+    remainingLives--;
+
+    if (remainingLives == 0) { //Player Game Over, print score and reset board
+        printf("Game Over! Total Score: %d", score);
+        fillBoard();
+    } else {
+
+        //Adjust lifebar
+        setLifeBar(remainingLives);
+
+        //Return to start
+        player1Pos = startingPosition;
+    }
+
     
 }
 
+double distanceToPlayer(Position pos) {
 
+    double powX = pow(pos.x - player1Pos.x, 2);
+    double powY = pow(pos.y - player1Pos.y, 2);
 
-void performMove(Direction d) {
+    return sqrt(powX + powY);
+}
+
+void levelCleared() {
+
+    //Check if level is cleared
+    if (remainingFood == 0) {
+        printf("Level Completed. Cumulative Score Between Rounds: %d\n", score);
+
+         //Give an extra life, up to max 3
+        if (remainingLives > 0 && remainingLives != 3) {
+            printf("You regain a lost life!\n");
+            remainingLives++;
+        } 
+
+        fillBoard();
+    }
+}
+
+void walkIntoGhost(int x, int y) {
+
+    if (gameBoard[x][y] == ghost1Block) {
+        hitByGhost();
+    } else if (gameBoard[x][y] == ghost2Block) {
+        hitByGhost();
+    } else if (gameBoard[x][y] == ghost3Block) {
+        hitByGhost();
+    }
+}
+
+void performMove(Direction d, Position currentPos, Block b) {
     
-    int x = player1Pos.x;
-    int y = player1Pos.y;
+    int x = currentPos.x;
+    int y = currentPos.y;
     
     switch(d){
 		case Left:
-            // player1Pos.y - 1
-            if (player1Pos.y > 0 && gameBoard[x][y - 1] != obstacleBlock) {
+            // currentPos.x - 1
+            if (x > 0 && gameBoard[x - 1][y] != obstacleBlock) {
                 
-                //Check for food
-                if (gameBoard[x][y-1] == foodBlock) {
-                    remainingFood--;
+                //Actions to consider if its a player
+                if (gameBoard[x-1][y] == foodBlock && b == player1Block) {
+                    foodObtained(x-1,y);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    walkIntoGhost(x-1,y);
                 }
                 
-                //Check for Death
-                if (gameBoard[x][y-1] == fireBlock) {
-                    printf("Game Over! \n");
-                    fillBoard();
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+
+                    //Check if he killed a player
+                    if (gameBoard[x-1][y] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x-1, y, b);
+                    }
+
+                    //Actions to consider if its a ghost
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x-1, y, b);
+                    setBoardBlock(x, y, neutralGroundBlock);
                 }
-                
-                setBoardBlock(x, y - 1 , player1Block);
-                setBoardBlock(x, y, neutralGroundBlock);
-                player1Pos.y--;
+                changedFlag[x-1][y] = '1';
+                changedFlag[x][y] = '1';
+                currentPos.x--;
             }
             
 			break;
 		case Right:
-            // player1Pos.y + 1
-            if ((player1Pos.y < 9 && gameBoard[x][y + 1] != obstacleBlock) && (gameBoard[x][y + 1] != player2Block) ) {
+            // currentPos.x + 1
+            if (x < W_BLOCKS-1 && gameBoard[x+1][y] != obstacleBlock) {
                 
-                //Check for food
-                if (gameBoard[x][y+1] == foodBlock) {
-                    score+=FOOD_SCORE;
-                    remainingFood--;
+                //Actions to consider if its a player 
+                if (gameBoard[x+1][y] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x+1,y);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    walkIntoGhost(x+1,y);
                 }
-                
-                //Check for Death
-                if (gameBoard[x][y+1] == fireBlock) {
-                    printf("Game Over! \n");
-                    fillBoard();
+
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+
+                    //Check if he killed a player
+                    if (gameBoard[x+1][y] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x+1, y, b);
+                    }
+
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    } 
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x+1, y, b);
+                    setBoardBlock(x, y, neutralGroundBlock);
                 }
-                
-                setBoardBlock(x, y + 1 , player1Block);
-                setBoardBlock(x, y, neutralGroundBlock);
-                player1Pos.y++;
+                changedFlag[x+1][y] = '1';
+                changedFlag[x][y] = '1';            
+                currentPos.x++;
+
             }
             
 			break;
 		case Up:
-            // player1Pos.x - 1
-            if ((player1Pos.x > 0 && gameBoard[x - 1][y] != obstacleBlock) && (gameBoard[x - 1][y] != player2Block)) {
+            // currentPos.y - 1
+            if (y > 0 && gameBoard[x][y-1] != obstacleBlock) {
                 
-                //Check for food
-                if (gameBoard[x-1][y] == foodBlock) {
-                    score+=FOOD_SCORE;
-                    remainingFood--;
+                //Actions to consider if its a player 
+                if (gameBoard[x][y-1] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x,y-1);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    walkIntoGhost(x,y-1);
                 }
-                
-                //Check for Death
-                if (gameBoard[x-1][y] == fireBlock) {
-                    printf("Game Over! \n");
-                    fillBoard();
+
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+
+                    //Check if he killed a player
+                    if (gameBoard[x][y-1] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x+1, y, b);
+                    }
+
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x, y-1 , b);
+                    setBoardBlock(x, y, neutralGroundBlock);
                 }
-                
-                setBoardBlock(x - 1, y , player1Block);
-                setBoardBlock(x, y, neutralGroundBlock);
-                player1Pos.x--;
+                changedFlag[x][y-1] = '1';
+                changedFlag[x][y] = '1';
+                currentPos.y--;
             }
             
 			break;
 		case Down:
-            // Player1Pos.x + 1
-            if ((player1Pos.x < 9 && gameBoard[x+1][y] != obstacleBlock) && (gameBoard[x+1][y] != player2Block)) {
+            // Player1Pos.y + 1
+            if (y < H_BLOCKS-1 && gameBoard[x][y+1] != obstacleBlock) {
                 
-                //Check for food
-                if (gameBoard[x+1][y] == foodBlock) {
-                    score+=FOOD_SCORE;
-                    remainingFood--;
+                //Actions to consider if its a player 
+                if (gameBoard[x][y+1] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x,y+1);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    walkIntoGhost(x,y+1);
                 }
-                
-                //Check for Death
-                if (gameBoard[x+1][y] == fireBlock) {
-                    printf("Game Over! \n");
-                    fillBoard();
+
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+
+                    //Check if he killed a player
+                    if (gameBoard[x][y+1] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x, y+1 , b);
+                    }
+
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x, y+1 , b);
+                    setBoardBlock(x, y, neutralGroundBlock);
                 }
-                
-                setBoardBlock(x + 1, y , player1Block);
-                setBoardBlock(x, y, neutralGroundBlock);
-                player1Pos.x++;
+                changedFlag[x][y+1] = '1';
+                changedFlag[x][y] = '1';           
+                currentPos.y++;
             }
-			break;
-            
+			break;      
     }
-    
-    printBoard();
-    printf("Player position, X: %d Y: %d\n", player1Pos.x, player1Pos.y);
-    printf("Remaining Food: %d\n", remainingFood);
-    if (remainingFood == 0) {
-        printf("You are winner! Score: %d", score);
+
+    //Update position
+    if (b == player1Block) {
+        player1Pos = currentPos;  
+    } else if (b == ghost1Block) {
+        ghost1Pos = currentPos;
+    } else if (b == ghost2Block) {
+        ghost2Pos = currentPos;
+    } else if (b == ghost3Block) {
+        ghost3Pos = currentPos;
     }
-    printf("\n");
+
+    //Check if level is cleared
+    levelCleared();
     
 }
 
-//Measure the charge of the tank shot
-//The leds pn the microcontroller should display the charge level, so write to the driver
-void tankCharge() {
-    
-    charge += 10;
-}
+//AI for the ghosts
+Direction determineGhostMove(Position ghostPosition) {
 
-//Distance in pixel the bullet should travel
-int getDistanceToTravel() {
-    
-    return (int) (MAX_BULLET_DISTANCE * (charge/100));
-    
-}
+    int x = ghostPosition.x;
+    int y = ghostPosition.y;
 
-void moveBullet(double dx, double dy, double remainingDistance) {
-    
-    bulletPos.x -= dx;
-    bulletPos.y -= dy;
-    
-    //printf("sqrt %p\n", sqrt);
-    //remainingDistance -= sqrt(dx*dx + dy*dy);
-    
-    if (remainingDistance <= 0) {
-        //Bomb explodes, shit happens
-    }
-    
+
+
 }
 
 void naive_wait(int wait){ // wait in ms
@@ -164,62 +260,38 @@ void naive_wait(int wait){ // wait in ms
 		wait--;
 	}
 }
-    
-void checkHit() {
-        
-}
-
 
 int main(){
 
-/*
-    int i = 9;
-    char *buttons_pressed;
-    buttons_pressed = malloc(sizeof(char));
-    *buttons_pressed = (char) i;
-    printf("char: %s\n", buttons_pressed);
-    char c128 = (char) i;
-    
-    if(*buttons_pressed & c128 == c128){
-        sw7_pressed();
-
-    }
-    */
-    /*
-    char byte = 0x0;
-    printBoard();
-    printf("\n");
-    interpretButtonInput(byte);
-    */
-
+    initScreen();
+    initLedButtons();
     mainLoop();
+    closeScreen();
+    closeLedButtons();
 
     return 0;
 }
 
 //A possible version of the main function/loop
 void mainLoop() {
-    
+
+    printf("Hello test start\n");
+
     fillBoard();
-    
-    int fakeTimer = 0;
-    
+
     //Periodically check for input and other stuff
     while (1) {
-        
-        //Wait
-        naive_wait(100000000);
-        
+                
         //Check for input
-        char driverInput = 0x80;
+        char driverInput = readButtons();
         
         //Determine what buttons have been pressed, and execute the action
         interpretButtonInput(driverInput);
 
-        //Move Bullet
-        
-        //Refresh Screen
-        renderBoard();
+        //Move ghosts
+
+        //Move the ghosts
+        renderBoard(TRUE);
     }
     
     
@@ -227,157 +299,239 @@ void mainLoop() {
 
 void interpretButtonInput(char driverInput) {
 
+
     if (driverInput == 0) return; 
     
-  
     if((driverInput & 0x80) != 0) { //SW7 pressed
-        performMove(Up);
-    }
-
-    if((driverInput & 0x40) != 0) { //SW6 pressed
-        performMove(Down);
+        performMove(Up, player1Pos, player1Block);
     }
 
     if((driverInput & 0x20) != 0) { //SW5 pressed
-        performMove(Left);
+        performMove(Down, player1Pos, player1Block);
     }
 
-    if((driverInput & 0x10) != 0) { //SW4 pressed
-        performMove(Right);
+    if((driverInput & 0x04) != 0) { //SW2 pressed
+        performMove(Left, player1Pos, player1Block);
     }
 
-    if((driverInput & 0x4) != 0) { //SW2 pressed
-        tankCharge();
-    } else if (charge > 0){
-        tankFire();
-    }
-
-    if((driverInput & 0x2) != 0) { //SW1 pressed
-        adjustReticule(Up);
-    }
-
-    if((driverInput & 0x1) != 0) { //SW0 pressed
-        adjustReticule(Down);
+    if((driverInput & 0x01) != 0) { //SW0 pressed
+        performMove(Right, player1Pos, player1Block);
     }
     
 }
 
-void tankFire() {
-
-
-}
-
-
-void adjustReticule(Direction d) {
-    
-    if ((player2Degrees >= 90 && d == Up) || (player2Degrees <= 0 && d == Down)) return;
-    
-    switch(d){
-        case Up:
-            player2Degrees += 5;
-            break;
-        case Down:
-            player2Degrees -= 5;
-            break;
-            
-    }
-    
-}
-
-void renderBoard(){
+void renderBoard(int optimize){
 	
-    /*   
-	for (int i = 0; i < H_BLOCKS; i++){
-		for(int j = 0; j < W_BLOCKS; j++){
-            setBlock(i,j,board[i][j]);
+     
+	for (int i = 0; i < W_BLOCKS; i++){
+		for(int j = 0; j < H_BLOCKS; j++){
+            if (optimize == TRUE) {
+                if (changedFlag[i][j] == '1') {
+                    setBlock(i,j,gameBoard[i][j]);
+                }
+            } else {
+                setBlock(i,j,gameBoard[i][j]);
+            }
 		}
 	}
     refreshScreen(currentFrameBuffer);
-    */
+    
 
      
 }
-    
-    void printBoard() {
-        
-        int i, j;
-        for (i = 0; i < H_BLOCKS; i++){
-            for(j = 0; j < W_BLOCKS; j++){
-                
-                Block b = gameBoard[i][j];
-                
-                if (j == 0) {
-                    printf("|");
-                }
-                
-                if (b == player1Block) {
-                    printf("@");
-                } else if (b == player2Block) {
-                    printf("&");
-                } else if (b == fireBlock) {
-                    printf("^");
-                } else if (b == neutralGroundBlock) {
-                    printf(" ");
-                } else if (b == obstacleBlock) {
-                    printf("#");
-                } else if (b == foodBlock) {
-                    printf("·");
-                } 
-                
-                printf("|");
-                
-            }
-            
-            printf("\n");
-        }
-        
+
+void setLifeBar(int lives) {
+
+    if (lives == 1) {
+        setLeds(0x80);
+    } else if (lives == 2) {
+        setLeds(0xC0);
+    } else if (lives == 3) {
+        setLeds(0xE0);
     }
-    
+}
+
 void setBoardBlock(unsigned int x, unsigned y, Block b) {
-    
-    if (x > H_BLOCKS || y > W_BLOCKS) return;
+
+    if (x > W_BLOCKS || y > H_BLOCKS) return;
     
     gameBoard[x][y] = b;
 }
 
-
 //Initial board settings
 void fillBoard() {
-    
-    //Fill out obstacles
-    gameBoard[2][1] = obstacleBlock;
-    gameBoard[2][2] = obstacleBlock;
-    gameBoard[5][3] = obstacleBlock;
-    gameBoard[6][3] = obstacleBlock;
-    gameBoard[7][7] = obstacleBlock;
-    gameBoard[7][8] = obstacleBlock;
-    gameBoard[0][8] = obstacleBlock;
-    gameBoard[1][9] = obstacleBlock;
-    gameBoard[1][8] = obstacleBlock;
-    
-    player1Pos.x = 9;
-    player1Pos.y = 0;
-    
-    //Player 1 (Mover)
-    gameBoard[player1Pos.x][player1Pos.y] = player1Block;
-    
-    //Player 2 (Shooter)
-    gameBoard[0][9] = player2Block;
-    
-    //Set Player 2 Reticule degree
-    player2Degrees = 45.0;
 
-    remainingFood = 0;
+    //Clear the board
+    for (int i = 0; i < W_BLOCKS; i++)
+    {
+        for (int j = 0; j < H_BLOCKS; j++)
+        {
+            gameBoard[i][j] = neutralGroundBlock;
+        }   
+    }
+
+    //Fill out obstacles
+    drawBoard();
     
+    //Set initial player coordinates    
+    player1Pos = startingPosition;
+    
+    //Set player 1 position
+    gameBoard[player1Pos.x][player1Pos.y] = player1Block;
+
+    //Set player lives, if its a new game (or game over from an old game)
+    if (remainingLives == 0) {
+        remainingLives = startingLives;
+    }
+    setLifeBar(remainingLives);
+
+    //Monsters
+
     //Fill food ground
+    remainingFood = 0;
     int i,j;
-    for (i = 0; i < H_BLOCKS; i++){
-        for(j = 0; j < W_BLOCKS; j++){
-            if (gameBoard[i][j] != obstacleBlock && gameBoard[i][j] != player1Block && gameBoard[i][j] != player2Block) {
+    for (i = 0; i < W_BLOCKS; i++){
+        for(j = 0; j < H_BLOCKS; j++){
+            if (gameBoard[i][j] == neutralGroundBlock){
                 gameBoard[i][j] = foodBlock;
+                foodLocation[i][j] = foodChar;
                 remainingFood++;
             }
         }
     }
+
+    renderBoard(FALSE);
     
+}
+
+//Builds the board
+void drawBoard() {
+
+    gameBoard[0][5] = obstacleBlock;
+    gameBoard[0][6] = obstacleBlock;
+    gameBoard[0][7] = obstacleBlock;
+    gameBoard[0][8] = obstacleBlock;
+    gameBoard[0][9] = obstacleBlock;
+    gameBoard[0][12] = obstacleBlock;
+    gameBoard[1][1] = obstacleBlock;
+    gameBoard[1][3] = obstacleBlock;
+    gameBoard[1][5] = obstacleBlock;
+    gameBoard[1][9] = obstacleBlock;
+    gameBoard[1][12] = obstacleBlock;
+    gameBoard[1][14] = obstacleBlock;
+    gameBoard[2][1] = obstacleBlock;
+    gameBoard[2][3] = obstacleBlock;
+    gameBoard[2][5] = obstacleBlock;
+    gameBoard[2][6] = obstacleBlock;
+    gameBoard[2][8] = obstacleBlock;
+    gameBoard[2][9] = obstacleBlock;
+    gameBoard[2][14] = obstacleBlock;
+    gameBoard[3][3] = obstacleBlock;
+    gameBoard[3][11] = obstacleBlock;
+    gameBoard[3][14] = obstacleBlock;
+    gameBoard[4][1] = obstacleBlock;
+    gameBoard[4][3] = obstacleBlock;
+    gameBoard[4][7] = obstacleBlock;
+    gameBoard[4][8] = obstacleBlock;
+    gameBoard[4][9] = obstacleBlock;
+    gameBoard[4][11] = obstacleBlock;
+    gameBoard[4][12] = obstacleBlock;
+    gameBoard[4][14] = obstacleBlock;
+    gameBoard[5][1] = obstacleBlock;
+    gameBoard[5][3] = obstacleBlock;
+    gameBoard[5][8] = obstacleBlock;
+    gameBoard[5][11] = obstacleBlock;
+    gameBoard[5][12] = obstacleBlock;
+    gameBoard[5][14] = obstacleBlock;
+    gameBoard[6][5] = obstacleBlock;
+    gameBoard[6][7] = obstacleBlock;
+    gameBoard[6][8] = obstacleBlock;
+    gameBoard[6][9] = obstacleBlock;
+    gameBoard[6][11] = obstacleBlock;
+    gameBoard[6][14] = obstacleBlock;
+    gameBoard[7][3] = obstacleBlock;
+    gameBoard[7][5] = obstacleBlock;
+    gameBoard[7][14] = obstacleBlock;
+    gameBoard[8][0] = obstacleBlock;
+    gameBoard[8][1] = obstacleBlock;
+    gameBoard[8][3] = obstacleBlock;
+    gameBoard[8][5] = obstacleBlock;
+    gameBoard[8][7] = obstacleBlock;
+    gameBoard[8][8] = obstacleBlock;
+    gameBoard[8][9] = obstacleBlock;
+    gameBoard[8][12] = obstacleBlock;
+    gameBoard[8][14] = obstacleBlock;
+    gameBoard[9][3] = obstacleBlock;
+    gameBoard[9][4] = obstacleBlock;
+    gameBoard[9][5] = obstacleBlock;
+    gameBoard[9][7] = obstacleBlock;
+    gameBoard[9][9] = obstacleBlock;
+    gameBoard[9][10] = obstacleBlock;
+    gameBoard[9][12] = obstacleBlock;
+    gameBoard[10][1] = obstacleBlock;
+    gameBoard[10][2] = obstacleBlock;
+    gameBoard[10][3] = obstacleBlock;
+    gameBoard[10][4] = obstacleBlock;
+    gameBoard[10][9] = obstacleBlock;
+    gameBoard[10][10] = obstacleBlock;
+    gameBoard[10][12] = obstacleBlock;
+    gameBoard[10][13] = obstacleBlock;
+    gameBoard[10][14] = obstacleBlock;
+    gameBoard[11][1] = obstacleBlock;
+    gameBoard[11][4] = obstacleBlock;
+    gameBoard[11][7] = obstacleBlock;
+    gameBoard[11][9] = obstacleBlock;
+    gameBoard[11][10] = obstacleBlock;
+    gameBoard[11][12] = obstacleBlock;
+    gameBoard[12][7] = obstacleBlock;
+    gameBoard[12][8] = obstacleBlock;
+    gameBoard[12][9] = obstacleBlock;
+    gameBoard[12][12] = obstacleBlock;
+    gameBoard[12][14] = obstacleBlock;
+    gameBoard[13][1] = obstacleBlock;
+    gameBoard[13][3] = obstacleBlock;
+    gameBoard[13][4] = obstacleBlock;
+    gameBoard[13][5] = obstacleBlock;
+    gameBoard[13][14] = obstacleBlock;
+    gameBoard[14][0] = obstacleBlock;
+    gameBoard[14][1] = obstacleBlock;
+    gameBoard[14][5] = obstacleBlock;
+    gameBoard[14][14] = obstacleBlock;
+    gameBoard[15][1] = obstacleBlock;
+    gameBoard[15][3] = obstacleBlock;
+    gameBoard[15][5] = obstacleBlock;
+    gameBoard[15][7] = obstacleBlock;
+    gameBoard[15][8] = obstacleBlock;
+    gameBoard[15][9] = obstacleBlock;
+    gameBoard[15][10] = obstacleBlock;
+    gameBoard[15][11] = obstacleBlock;
+    gameBoard[15][12] = obstacleBlock;
+    gameBoard[15][14] = obstacleBlock;
+    gameBoard[16][3] = obstacleBlock;
+    gameBoard[16][5] = obstacleBlock;
+    gameBoard[16][14] = obstacleBlock;
+    gameBoard[17][1] = obstacleBlock;
+    gameBoard[17][3] = obstacleBlock;
+    gameBoard[17][5] = obstacleBlock;
+    gameBoard[17][10] = obstacleBlock;
+    gameBoard[17][11] = obstacleBlock;
+    gameBoard[17][12] = obstacleBlock;
+    gameBoard[17][14] = obstacleBlock;
+    gameBoard[18][1] = obstacleBlock;
+    gameBoard[18][2] = obstacleBlock;
+    gameBoard[18][3] = obstacleBlock;
+    gameBoard[18][8] = obstacleBlock;
+    gameBoard[18][10] = obstacleBlock;
+    gameBoard[18][14] = obstacleBlock;
+    gameBoard[19][1] = obstacleBlock;
+    gameBoard[19][3] = obstacleBlock;
+    gameBoard[19][5] = obstacleBlock;
+    gameBoard[19][6] = obstacleBlock;
+    gameBoard[19][8] = obstacleBlock;
+    gameBoard[19][10] = obstacleBlock;
+    gameBoard[19][12] = obstacleBlock;
+    gameBoard[19][14] = obstacleBlock;
+    gameBoard[20][5] = obstacleBlock;
+    gameBoard[20][8] = obstacleBlock;
+    gameBoard[20][12] = obstacleBlock;
 }

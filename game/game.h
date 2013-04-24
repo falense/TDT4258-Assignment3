@@ -1,45 +1,31 @@
 #ifndef _game_h
 #define _game_h
 
-/*
-  #include "sound.h"
-  #include "screen.h"
 
-  */
+//#include "sound.h"
+#include "screen.h"
+#include "bmp.h"
+#include "ledbuttons.h"
 
-enum Block {White, Black, Blue, Red, Green,Yellow};
-typedef enum Block Block;
-
-
-
-#define H_BLOCKS 10
-#define W_BLOCKS 10
-
+#define startingPosX 10
+#define startingPosY 11
 #define FOOD_SCORE 70
-#define MAX_BULLET_DISTANCE 400
-
+#define startingLives 3
+#define TRUE 1
+#define FALSE 0
 
 enum Direction {Left, Right, Up, Down};
 typedef enum Direction Direction;
 
-
-
-Block player1Block = Blue;
-Block player2Block = Yellow;
-Block neutralGroundBlock = Green;
-Block fireBlock = Red;
+Block player1Block = Yellow;
+Block neutralGroundBlock = Blue;
 Block obstacleBlock = Black;
-Block foodBlock = White;
+Block ghost1Block = White;
+Block ghost2Block = White;
+Block ghost3Block = White;
+Block foodBlock = Red;
 
-/*
-
-char player1Char = '@';
-char player2Char = '&';
-char neutralGroundChar = 'G';
-char fireChar = 'F';
-char obstacleChar = '#';
- 
-*/
+char foodChar = '*';
 
 struct Position{
 	int x;
@@ -47,38 +33,40 @@ struct Position{
 };
 typedef struct Position Position;
 
-double player2Degrees;
-
 Position player1Pos;
-Position bulletPos;
+Position ghost1Pos;
+Position ghost2Pos;
+Position ghost3Pos;
 
 int remainingFood;
 int score;
-//bool shotsFired;
+int remainingLives;
 
-//0-100
-int charge;
+Block gameBoard[W_BLOCKS][H_BLOCKS];
+char foodLocation[W_BLOCKS][H_BLOCKS];
+char changedFlag[W_BLOCKS][H_BLOCKS];
+int ghost1WalkCount[W_BLOCKS][H_BLOCKS];
+int ghost2WalkCount[W_BLOCKS][H_BLOCKS];
+int ghost3WalkCount[W_BLOCKS][H_BLOCKS];
 
-Block gameBoard[H_BLOCKS][W_BLOCKS];
-char symbolBoard[H_BLOCKS][W_BLOCKS];
-
-//0 is SW7, 1 is SW6 etc etc
-char buttonsPressed[8];
+const Position startingPosition = {.x=startingPosX, .y=startingPosY};
 
 void initMainLoop();
 void fillBoard();
 void renderBoard();
 void printBoard();
-void testGame();
 void setBoardBlock(unsigned int x, unsigned int y, Block b);
-void adjustReticule(Direction d);
-void tankCharge();
-int getDistanceToTravel();
-void moveBullet();
 void mainLoop();
 void interpretButtonInput(char driverInput);
 void naive_wait(int wait);
-void tankFire();
+Direction determineGhostMove(Position ghostPosition);
+void drawBoard();
+void foodObtained();
+void setLifeBar(int lives);
+void hitByGhost();
+void levelCleared();
+void walkIntoGhost(int x, int y);
+double distanceToPlayer(Position pos);
 
 
 #endif
