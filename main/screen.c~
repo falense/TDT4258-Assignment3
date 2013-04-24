@@ -9,8 +9,8 @@ char *currentFrameBuffer;
 char *nextFrameBuffer;
 
 unsigned int pixelsChanged = 0;
-unsigned int smartUpdateMinX = SCREENHEIGHT;
-unsigned int smartUpdateMaxX = 0;
+unsigned int smartUpdateMinY = SCREENHEIGHT;
+unsigned int smartUpdateMaxY = 0;
 
 const unsigned int BLOCK_WIDTH = SCREENWIDTH/W_BLOCKS;
 const unsigned int BLOCK_HEIGHT = SCREENHEIGHT/H_BLOCKS;
@@ -22,12 +22,13 @@ void refreshScreen(char*buffer){
 	return;*/
 	pixelsChanged = 0;	
 
-	unsigned int smartUpdateDiffX = smartUpdateMaxX -smartUpdateMinX;
-	unsigned int lengthUpdate = smartUpdateDiffX*3*SCREENWIDTH;
+	unsigned int smartUpdateDiffY = smartUpdateMaxY -smartUpdateMinY;
+	unsigned int lengthUpdate = smartUpdateDiffY*3*SCREENWIDTH;
+
 
 
 	lseek(screenDeviceID, SCREENWIDTH*smartUpdateMinX*3, SEEK_SET);
-	ssize_t written = write(screenDeviceID, buffer+SCREENWIDTH*smartUpdateMinX*3,lengthUpdate);
+	ssize_t written = write(screenDeviceID, buffer+SCREENWIDTH*smartUpdateMinY*3,lengthUpdate);
 	if(written >= 0)
 		;  // handle successful write (which might be a partial write!)
 	else if(errno == EWOULDBLOCK)
@@ -69,12 +70,12 @@ void writeScreen(char* data, unsigned int start, unsigned int size){
 
 }
 void setPixel(unsigned int x, unsigned int y, Color c){
-	if (x >= SCREENHEIGHT || y >= SCREENWIDTH ) return;
+	if (y >= SCREENHEIGHT || x >= SCREENWIDTH ) return;
 	
-	if (x < smartUpdateMinX) smartUpdateMinX = x;
-	if (x > smartUpdateMaxX) smartUpdateMaxX = x;
+	if (y < smartUpdateMinY) smartUpdateMinY = y;
+	if (y > smartUpdateMaxY) smartUpdateMaxY = y;
 
-	unsigned int index = 3*(x*SCREENWIDTH+y);
+	unsigned int index = 3*(y*SCREENWIDTH+x);
 	
 	currentFrameBuffer[index] = c.blue;
 	currentFrameBuffer[index+1] = c.green;
@@ -86,8 +87,8 @@ void setPixel(unsigned int x, unsigned int y, Color c){
 
 
 void setBlock(unsigned int bx,unsigned int by, Block b){
-	int baseX = bx*BLOCK_HEIGHT;
-	int baseY = by*BLOCK_WIDTH;
+	int baseX = bx*BLOCK_WIDTH;
+	int baseY = by*BLOCK_HEIGHT;
 Color c;
 	switch(b){
 		case Black:
@@ -120,7 +121,7 @@ Color c;
 	}
 	for (unsigned int i = 0; i < BLOCK_HEIGHT; i++){
 		for (unsigned int j = 0; j < BLOCK_WIDTH; j++){
-			setPixel(i+baseX,j+baseY,c);
+			setPixel(j+baseX,i+baseY,c);
 		}
 	}
 }

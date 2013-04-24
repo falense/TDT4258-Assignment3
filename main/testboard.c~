@@ -8,8 +8,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/soundcard.h>
 
+
+#include "sound.h"
 #include "screen.h"
+#include "ledbuttons.h"
+
 Block board[W_BLOCKS][H_BLOCKS];
 
 struct Position{
@@ -35,10 +40,12 @@ void fillBoard(){
 		board[0][j] = Black;
 		board[W_BLOCKS-1][j] = Black;
 	}
+printf("Test\n");
 	for (int i = 0; i < W_BLOCKS; i++){
 		board[i][0] = Black;
 		board[i][H_BLOCKS-1] = Black;
 	}
+printf("Test\n");
 	for (int i = 0; i < H_BLOCKS*W_BLOCKS/4; i++){
 		int x = rand()%W_BLOCKS;
 		int y = rand()%H_BLOCKS;
@@ -95,15 +102,24 @@ void playerStep(){
 
 int main(){
 	initScreen();
+	initSound();
+	initLedButtons();
 	lcdTest();
 	while(1){
 		fillBoard();
 		printBoard();
+		
 		for (int i = 0; i < 100; i++){
+			setLeds((char)i);
+			setFrequency(120*(i%20));
 			playerStep();
 			printBoard();
+			playSounds();
+			if (readButtons() & 0x01 > 0) break;
 		}
 	}
+	closeLedButtons();
 	closeScreen();
+	closeSound();
 
 }

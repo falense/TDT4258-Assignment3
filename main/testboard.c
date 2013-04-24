@@ -15,7 +15,7 @@
 #include "screen.h"
 #include "ledbuttons.h"
 
-Block board[H_BLOCKS][W_BLOCKS];
+Block board[W_BLOCKS][H_BLOCKS];
 
 struct Position{
 	int x;
@@ -25,42 +25,41 @@ typedef struct Position Position;
 
 Position playerPos;
 void fillBoard(){
-	for (int i = 0; i < H_BLOCKS; i++){
-		for(int j = 0; j < W_BLOCKS; j++){
+	for (int i = 0; i < W_BLOCKS; i++){
+		for(int j = 0; j < H_BLOCKS; j++){
 			board[i][j] = White;
 		}
 	}
 
 	for (int i = 0; i < H_BLOCKS*W_BLOCKS/4; i++){
-		int x = rand()%H_BLOCKS;
-		int y = rand()%W_BLOCKS;
+		int x = rand()%W_BLOCKS;
+		int y = rand()%H_BLOCKS;
 		board[x][y] = Red;
 	}
-
-	for(int j = 0; j < W_BLOCKS; j++){
+	for(int j = 0; j < H_BLOCKS; j++){
 		board[0][j] = Black;
-		board[H_BLOCKS-1][j] = Black;
+		board[W_BLOCKS-1][j] = Black;
 	}
-	for (int i = 0; i < H_BLOCKS; i++){
+	for (int i = 0; i < W_BLOCKS; i++){
 		board[i][0] = Black;
-		board[i][W_BLOCKS-1] = Black;
+		board[i][H_BLOCKS-1] = Black;
 	}
 	for (int i = 0; i < H_BLOCKS*W_BLOCKS/4; i++){
-		int x = rand()%H_BLOCKS;
-		int y = rand()%W_BLOCKS;
+		int x = rand()%W_BLOCKS;
+		int y = rand()%H_BLOCKS;
 		board[x][y] = Black;
 	}
 
-	int x = (rand()%(H_BLOCKS-2))+1;
-	int y = (rand()%(W_BLOCKS-2))+1;
+	int x = (rand()%(W_BLOCKS-2))+1;
+	int y = (rand()%(H_BLOCKS-2))+1;
 	playerPos.x = x;
 	playerPos.y = y;
 	board[x][y] = Yellow;
 }
 void printBoard(){
 	
-	for (int i = 0; i < H_BLOCKS; i++){
-		for(int j = 0; j < W_BLOCKS; j++){
+	for (int i = 0; i < W_BLOCKS; i++){
+		for(int j = 0; j < H_BLOCKS; j++){
 			 setBlock(i,j,board[i][j]);
 		}
 	}
