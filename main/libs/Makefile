@@ -1,0 +1,20 @@
+
+MAKE = avr32-linux-gcc
+#MAKE = gcc
+
+all: qdbmp.o
+%.o: %.c
+	$(MAKE) -std=c99  -o $@ -c $< 
+clean:
+	rm -f *.o test2.bmp bmptest
+
+run: all
+	./main test.bmp test2.bmp
+
+testbmp: testbmp.o qdbmp.o
+	$(MAKE) -std=c99   -o bmptest $^
+runtestbmp: testbmp
+	./bmptest ../resources/images/test.bmp test2.bmp
+
+testall: runtestbmp
+
