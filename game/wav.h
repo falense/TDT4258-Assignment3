@@ -25,7 +25,6 @@ typedef struct{
 	char *samples;
 } Sound;
 
-void wavread(char *file_name,Sound * s);
 
 
 Sound* loadSound(char * filename);
