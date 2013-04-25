@@ -9,10 +9,10 @@ Sound* loadSound(char * filename){
 	Sound *s = (Sound*)malloc(sizeof(Sound));
 
 	int fd = open(filename,O_RDONLY);
-	printf("\nSample count: %u\n",s->length);
-	read(fd,s,4);
-	printf("\nSample count: %d\n",(int)s->length);
+	read(fd,&s->length,4);
 	
+	//if (s->length > 480000) s->length = 480000;
+
 	printf("\nSample count: %u\n",s->length);
 	s->samples = (char*)malloc(sizeof(char)*s->length);
 	read(fd,s->samples,sizeof(char)*s->length);

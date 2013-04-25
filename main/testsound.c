@@ -16,15 +16,20 @@
 
 int main(){
 	initSound();
-	while(1){
-		/*for (int i = 0; i < 100; i++){
-			setFrequency(120*(i%20));
-			for (int x = 0; x < 300000; x++){
-				int c = x*x;
-			}
-		}*/
-		playSoundFile("./resources/sounds/bumpisong.dat");
+	printf("test\n");
+	playSoundFile("./resources/sounds/bumpisong.dat");
+	printf("test\n");
+	
+	for (int i = 0; i < 10; i++){
+		feedBuffer();
 	}
+	printf("test\n");
+	playSoundFile("./resources/sounds/bumpisong.dat");
+	printf("test\n");
+	for (int i = 0; i < 1000; i++){
+		feedBuffer();
+	}
+	printf("test\n");
 	closeSound();
 
 }

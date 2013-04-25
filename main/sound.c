@@ -2,7 +2,6 @@ int soundDeviceID = -1;
 #include "sound.h"
 SoundPlaying *channels;
 void initSound(){
-///dev/ttyPA1
 	soundDeviceID = open("/dev/dsp",O_WRONLY );
 
 	if(soundDeviceID < 0)
@@ -10,20 +9,19 @@ void initSound(){
 		printf("Didnt manage to open sound device.");
 		exit(0);
 	}
-		;  // handle error
-	//int sampleRate = DSP_SAMPLERATE;
-	//ioctl(soundDeviceID,SOUND_PCM_WRITE_RATE,&sampleRate);
 
 	channels = (SoundPlaying*)malloc(sizeof(SoundPlaying)*MAXSOUNDCOUNT);
+	for(int i = 0; i < MAXSOUNDCOUNT;i++){
+		channels[i].ss = NULL;
+		channels[i].current = 0;
+	}
 }
 void closeSound(){
 	close(soundDeviceID);
-
 }
 void writeSoundValue(char *buffer, unsigned int length){
 	ssize_t written = write(soundDeviceID, buffer,length);
-	if(written >= 0)
-		;  // handle successful write (which might be a partial write!)
+	if(written > 0);
 	else if(errno == EWOULDBLOCK)
 		printf("Error writing");
 	else printf("Error writing");
@@ -95,33 +93,46 @@ void playSounds(){
 	writeSoundValue((char*)&data,SOUNDBURSTWRITE);
 }
 void playSoundFile(char*filename){
+
 	Sound *t = loadSound(filename);
-	for (int i = 0; i < t->length/SOUNDBURSTWRITE; i++){
-		
-		//if (length > t->length-i*SOUNDBURSTWRITE){
-		//	length = t->length-i*SOUNDBURSTWRITE;		
-		//}
-		printf("Start %d\n",i*SOUNDBURSTWRITE);
-		char * buffer = (char*)malloc(sizeof(char)*SOUNDBURSTWRITE);
-		int start = i*SOUNDBURSTWRITE;
-		for (int j = 0; j < SOUNDBURSTWRITE;j++){
-			buffer[j] = t->samples[start+j];
-		}	
-		writeSoundValue(buffer,SOUNDBURSTWRITE);
-		free(buffer);
-	}
 	
-	int end = ((t->length/SOUNDBURSTWRITE)*SOUNDBURSTWRITE);
-	int rem = t->length-end;
-	//printf("End: %d, Rem: %d\n",end,rem);
-	char * buffer = (char*)malloc(sizeof(char)*rem);
-	for (int j = 0; j < rem;j++){
-		buffer[j] = t->samples[end+j];
-	}	
-	writeSoundValue(buffer,rem);
-	free(buffer);
-	finalizeSound(t);
+	for (int i = 0; i < MAXSOUNDCOUNT; i++){
+		if(channels[i].ss == NULL){
+			channels[i].ss = t;
+			channels[i].current = 0;
+			printf("Sound started:");
+			printf(filename);
+			printf("\n");
+			break;
+		}
+	}
 }
 void feedBuffer(){
-
+	char * buffer = (char*)malloc(sizeof(char)*SOUNDBURSTWRITE);
+	if(!buffer){
+		printf("Error: feedBuffer didnt manage to allocate memmory (%d).\n",
+			sizeof(char)*SOUNDBURSTWRITE);
+		return;
+	}
+	for (int j = 0; j < SOUNDBURSTWRITE; j++){
+		int v = 0;
+		short activeChannels = 0;
+		for (int i = 0; i < MAXSOUNDCOUNT; i++){
+			if(channels[i].ss != NULL){
+	
+				v += channels[i].ss->samples[channels[i].current];
+				channels[i].current++;
+				if (channels[i].current == channels[i].ss->length){
+					channels[i].current = 0;
+					finalizeSound(channels[i].ss);
+					channels[i].ss = NULL;
+				}
+				activeChannels++;
+			}
+		}
+		buffer[j] = v/activeChannels;
+		//printf("Active channels: %d\n",activeChannels);
+	}
+	writeSoundValue(buffer,SOUNDBURSTWRITE);
+	free(buffer);
 }

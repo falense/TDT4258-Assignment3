@@ -25,6 +25,7 @@ typedef struct {
 } SoundPlaying;
 
 #define MAXSOUNDCOUNT 10
+extern SoundPlaying *channels;
 
 
 void initSound();
@@ -35,10 +36,11 @@ void writeSoundValue(char *buffer, unsigned int length);
 
 #define DSP_SAMPLERATE 8000
 
-#define SOUNDBURSTWRITE DSP_SAMPLERATE /8
+#define SOUNDBURSTWRITE (DSP_SAMPLERATE /8)
 
 void playSounds();
 void playSoundFile();
 void setFrequency(double hertz);
+void feedBuffer();
 #endif
 

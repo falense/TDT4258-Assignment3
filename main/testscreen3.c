@@ -11,6 +11,7 @@
 
 #include "screen.h"
 Block board[W_BLOCKS][H_BLOCKS];
+int boardFlag[W_BLOCKS][H_BLOCKS];
 
 struct Position{
 	int x;
@@ -23,6 +24,7 @@ void fillBoard(){
 	for (int i = 0; i < W_BLOCKS; i++){
 		for(int j = 0; j < H_BLOCKS; j++){
 			board[i][j] = Ground;
+			boardFlag[i][j] = 1;
 		}
 	}
 
@@ -55,7 +57,10 @@ void printBoard(){
 	
 	for (int i = 0; i < W_BLOCKS; i++){
 		for(int j = 0; j < H_BLOCKS; j++){
+			if(boardFlag[i][j] == 1){
 			 setBlock(i,j,board[i][j]);
+			boardFlag[i][j] = 0;			
+			}
 		}
 	}
 refreshScreen(currentFrameBuffer);	
@@ -85,6 +90,9 @@ void playerStep(){
 		}
 		
 	}
+	boardFlag[playerPos.x][playerPos.y] = 1;
+	boardFlag[playerPos.x+x][playerPos.y+y] = 1;
+
 	board[playerPos.x][playerPos.y] = Ground;
 	board[playerPos.x+x][playerPos.y+y] = Pacman;
 	playerPos.x = playerPos.x+x;
@@ -99,7 +107,7 @@ int main(){
 	while(1){
 		fillBoard();
 		printBoard();
-		for (int i = 0; i < 100; i++){
+		for (int i = 0; i < 1000; i++){
 			playerStep();
 			printBoard();
 		}

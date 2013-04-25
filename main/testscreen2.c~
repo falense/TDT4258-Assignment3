@@ -31,11 +31,11 @@ void lcdTest(){
 int main(){
 	initScreen();
 	lcdTest();
-	Bitmap * b = loadBitmap("./resources/images/ghost3_phatch.bmp");
+	Bitmap * b = loadBitmap("./resources/images/victory.bmp");
 	printf("Height: %d Width: %d\n",b->height, b->width);
 	int x,y;
-	for (x = 0; x < b->height; x++){
-		for(y = 0; y < b->width; y++){
+	for (x = 0; x < b->width; x++){
+		for(y = 0; y < b->height; y++){
 			Color c = getPixel(x,y,b);
 			setPixel(x,y,c);
 		}
