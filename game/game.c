@@ -4,26 +4,81 @@
 #include <stdlib.h> 
 #include <math.h>
 
-/* 
- This file will include the game's logic. 
-
- It will also instruct the screen framework to put display what it want.
+/* MAIN FUNCTION */
  
- */
-
-//Move the unit standing on the currentPos in the direction d
-
-void foodObtained(int x, int y) {
-
-    score+=FOOD_SCORE;
-    remainingFood--;
-    foodLocation[x][y] = '0';
+int main() {
+    
+    //Component Initialization
+    initScreen();
+    initSound();
+    initLedButtons();
+    
+    //Perform initial setup of board
+    fillBoard();
+    
+    //The main loop
+    mainLoop();
+    
+    //Component finalizing
+    closeScreen();
+    closeSound();
+    closeLedButtons();
+    
+    return 0;
 }
 
-void flagForRender(int x, int y) {
+/* MAIN LOOP */
 
-    changedFlag[x][y] = '1';
+void mainLoop() {
+    
+    while (1) {
+        
+        //Check for input
+        char driverInput = readButtons();
+        
+        //Determine what buttons have been pressed, and execute the action
+        interpretButtonInput(driverInput);
+        
+        //Feed the music buffer to keep the music going
+        feedBuffer();
+        
+        //Move the ghosts
+        if (timeStep > 50){
+            ghostsMoveTurn();
+        }
+        
+        timeStep += 1;
+        
+        //Render the board, but only update what needs to be updated
+        renderBoard(TRUE);
+    }
+    
+    
 }
+
+/* GAME END METHODS */
+
+//Check if the level is cleared
+void levelCleared() {
+    
+    //Check if level is cleared
+    if (remainingFood == 0) {
+        printf("Level Completed. Cumulative Score Between Rounds: %d\n", score);
+        
+        //Give an extra life, up to max 3
+        if (remainingLives > 0 && remainingLives != 3) {
+            printf("You regain a lost life!\n");
+            remainingLives++;
+        }
+        
+        displayWin();
+        naive_wait(50000000);
+        fillBoard();
+    }
+}
+
+
+//Display a static win screen for about 2 seconds when you lose
 void displayLose(){
     printf("Displaying lose screen\n");
     Bitmap * b = loadBitmap("./resources/images/lose.bmp");
@@ -37,6 +92,8 @@ void displayLose(){
     refreshScreen(currentFrameBuffer);
     finalizeBitmap(b);
 }
+
+//Display a static win screen for about 2 seconds when you win
 void displayWin(){
 
     Bitmap * b = loadBitmap("./resources/images/victory.bmp");
@@ -50,6 +107,9 @@ void displayWin(){
     refreshScreen(currentFrameBuffer);
     finalizeBitmap(b);
 }
+
+/* HIT DETECTION METHODS */
+//Checks if the player/ghosts has hit another player, a ghost or food (player only) 
 
 void hitByGhost() {
 
@@ -74,35 +134,10 @@ void hitByGhost() {
         player1Pos = startingPosition;
 
     }
-
     
 }
 
-int distanceToPlayer(Position pos) {
-
-    int diffX = pos.x - player1Pos.x;
-    int diffY = pos.y - player1Pos.y;
-    return diffY*diffY+diffX*diffX;
-}
-
-void levelCleared() {
-
-    //Check if level is cleared
-    if (remainingFood == 0) {
-        printf("Level Completed. Cumulative Score Between Rounds: %d\n", score);
-
-         //Give an extra life, up to max 3
-        if (remainingLives > 0 && remainingLives != 3) {
-            printf("You regain a lost life!\n");
-            remainingLives++;
-        } 
-
-        displayWin();
-        naive_wait(50000000);
-        fillBoard();
-    }
-}
-
+//Check if the player has walked into a ghost
 int walkIntoGhost(int x, int y) {
 
     if (gameBoard[x][y] == ghost1Block) {
@@ -119,176 +154,218 @@ int walkIntoGhost(int x, int y) {
     return 0;
 }
 
-void performMove(Direction d, Position currentPos, Block b) {
+//Check if the player has walked onto a food block and obtained food
+void foodObtained(int x, int y) {
+    score+=FOOD_SCORE;
+    remainingFood--;
+    foodLocation[x][y] = '0';
+}
+
+/* RENDER METHODS */
+
+//performs a call to the screen framework, to change the screen.
+//It can either be done optimized or unoptimized.
+//Optimized: Only changes blocks that have been changed based on the changedFlag array
+//Unoptimized: Draw every block
+void renderBoard(int optimize){
+	
+	for (int i = 0; i < W_BLOCKS; i++){
+		for(int j = 0; j < H_BLOCKS; j++){
+            if (optimize == TRUE) {
+                if (changedFlag[i][j] == '1') {
+                    setBlock(i,j,gameBoard[i][j]);
+                }
+            } else {
+                setBlock(i,j,gameBoard[i][j]);
+            }
+		}
+	}
+    refreshScreen(currentFrameBuffer);
+}
+
+//These functions set some global variable
+/* SETTER/GETTER FUNCTIONS */
+
+void setBoardBlock(unsigned int x, unsigned y, Block b) {
     
-    int x = currentPos.x;
-    int y = currentPos.y;
+    if (x > W_BLOCKS || y > H_BLOCKS) return;
     
-    switch(d){
-		case Left:
-            // currentPos.x - 1
-            if (x > 0 && gameBoard[x - 1][y] != obstacleBlock) {
-                
-                //Actions to consider if its a player
-                if (gameBoard[x-1][y] == foodBlock && b == player1Block) {
-                    foodObtained(x-1,y);
-                } else if (b == player1Block) { //Did the player run into a ghost?
-                    if (walkIntoGhost(x-1,y)) return;
-                }
-                
-                //Actions to consider if its a ghost
-                if (b != player1Block) {
+    gameBoard[x][y] = b;
+    
+    setFlagForRender(x,y);
+}
 
-                    //Check if he killed a player
-                    if (gameBoard[x-1][y] == player1Block) {
-                        hitByGhost();
-                    } else { //Just walk to the new position
-                        setBoardBlock(x-1, y, b);
-                    }
-
-                    //Check if he was standing on food
-                    if (foodLocation[x][y] == foodChar) {
-                        setBoardBlock(x,y, foodBlock);
-                    } else {
-                        setBoardBlock(x, y, neutralGroundBlock);
-                    }
-                } else { //Not a ghost, therefore a player. Move normally
-                    setBoardBlock(x-1, y, b);
-                    setBoardBlock(x, y, neutralGroundBlock);
-                }
-                currentPos.x--;
-            }
-            
-			break;
-		case Right:
-            // currentPos.x + 1
-            if (x < W_BLOCKS-1 && gameBoard[x+1][y] != obstacleBlock) {
-                
-                //Actions to consider if its a player 
-                if (gameBoard[x+1][y] == foodBlock && b == player1Block) { //Check for food
-                    foodObtained(x+1,y);
-                } else if (b == player1Block) { //Did the player run into a ghost?
-                    if (walkIntoGhost(x+1,y)) return;
-                }
-
-                //Actions to consider if its a ghost
-                if (b != player1Block) {
-
-                    //Check if he killed a player
-                    if (gameBoard[x+1][y] == player1Block) {
-                        hitByGhost();
-                    } else { //Just walk to the new position
-                        setBoardBlock(x+1, y, b);
-                    }
-
-                    //Check if he was standing on food
-                    if (foodLocation[x][y] == foodChar) {
-                        setBoardBlock(x,y, foodBlock);
-                    } else {
-                        setBoardBlock(x, y, neutralGroundBlock);
-                    } 
-                } else { //Not a ghost, therefore a player. Move normally
-                    setBoardBlock(x+1, y, b);
-                    setBoardBlock(x, y, neutralGroundBlock);
-                }
-
-                currentPos.x++;
-
-            }
-            
-			break;
-		case Up:
-            // currentPos.y - 1
-            if (y > 0 && gameBoard[x][y-1] != obstacleBlock) {
-                
-                //Actions to consider if its a player 
-                if (gameBoard[x][y-1] == foodBlock && b == player1Block) { //Check for food
-                    foodObtained(x,y-1);
-                } else if (b == player1Block) { //Did the player run into a ghost?
-                    if (walkIntoGhost(x,y-1)) return;
-                }
-
-                //Actions to consider if its a ghost
-                if (b != player1Block) {
-
-                    //Check if he killed a player
-                    if (gameBoard[x][y-1] == player1Block) {
-                        hitByGhost();
-                    } else { //Just walk to the new position
-                        setBoardBlock(x, y-1, b);
-                    }
-
-                    if (foodLocation[x][y] == foodChar) {
-                        setBoardBlock(x,y, foodBlock);
-                    } else {
-                        setBoardBlock(x, y, neutralGroundBlock);
-                    }
-                } else { //Not a ghost, therefore a player. Move normally
-                    setBoardBlock(x, y-1 , b);
-                    setBoardBlock(x, y, neutralGroundBlock);
-                }
-
-                currentPos.y--;
-            }
-            
-			break;
-		case Down:
-            // Player1Pos.y + 1
-            if (y < H_BLOCKS-1 && gameBoard[x][y+1] != obstacleBlock) {
-                
-                //Actions to consider if its a player 
-                if (gameBoard[x][y+1] == foodBlock && b == player1Block) { //Check for food
-                    foodObtained(x,y+1);
-                } else if (b == player1Block) { //Did the player run into a ghost?
-                    if (walkIntoGhost(x,y+1)) return;
-                }
-
-                //Actions to consider if its a ghost
-                if (b != player1Block) {
-
-                    //Check if he killed a player
-                    if (gameBoard[x][y+1] == player1Block) {
-                        hitByGhost();
-                    } else { //Just walk to the new position
-                        setBoardBlock(x, y+1 , b);
-                    }
-
-                    if (foodLocation[x][y] == foodChar) {
-                        setBoardBlock(x,y, foodBlock);
-                    } else {
-                        setBoardBlock(x, y, neutralGroundBlock);
-                    }
-                } else { //Not a ghost, therefore a player. Move normally
-                    setBoardBlock(x, y+1 , b);
-                    setBoardBlock(x, y, neutralGroundBlock);
-                }
-          
-                currentPos.y++;
-            }
-			break;      
+void setLifeBar(int lives) {
+    char r = 0;
+    for (int i = 0; i < lives;i++){
+        
+        r = r >> 1;
+        r = r | 0x80;
+        
     }
+    setLeds(r);
+}
 
-    //Update position
-    if (b == player1Block) {
-        player1Pos = currentPos;  
-    } else if (b == ghost1Block) {
-        ghost1Pos = currentPos;
-    } else if (b == ghost2Block) {
-        ghost2Pos = currentPos;
-    } else if (b == ghost3Block) {
-        ghost3Pos = currentPos;
+void setFlagForRender(int x, int y) {
+    changedFlag[x][y] = '1';
+}
+
+unsigned char * getWalkCount(int x, int y, Block b) {
+    
+    switch(b){
+            
+        case Ghost1:
+            return &ghost1WalkCount[x][y];
+        case Ghost2:
+            return &ghost2WalkCount[x][y];
+        case Ghost3:
+            return &ghost3WalkCount[x][y];
+            
     }
+    return NULL;
+}
 
-    //Check if level is cleared
-    levelCleared();
+Position getMonsterPosition(Block b) {
+    
+    switch(b){
+            
+        case Ghost1:
+            return ghost1Pos;
+        case Ghost2:
+            return ghost2Pos;
+        case Ghost3:
+            return ghost3Pos;
+    }
+}
+
+/* HELPER METHODS */
+
+int naive_wait(int wait) { // wait in ms
+	wait = wait;
+    int r = 0;
+	while(wait > 0){
+		int a = wait*wait;
+		wait--;
+        r += a;
+	}
+    return r;
+}
+
+//Used by the AI
+int distanceToPlayer(Position pos) {
+    
+    int diffX = pos.x - player1Pos.x;
+    int diffY = pos.y - player1Pos.y;
+    return diffY*diffY+diffX*diffX;
+}
+
+
+/* MOVEMENT METHODS */
+
+//A high-level method called by the main loop to make the ghosts move
+void ghostsMoveTurn() {
+    
+    Direction ghost1Move = determineGhostMove(ghost1Pos, ghost1Block);
+    moveGhost(ghost1Move, ghost1Pos, ghost1Block);
+    
+    Direction ghost2Move = determineGhostMove(ghost2Pos, ghost2Block);
+    moveGhost(ghost2Move, ghost2Pos, ghost2Block);
+    
+    Direction ghost3Move = determineGhostMove(ghost3Pos, ghost3Block);
+    moveGhost(ghost3Move, ghost3Pos, ghost3Block);
+}
+
+//Makes a single ghost perform a move
+void moveGhost(Direction d, Position p, Block b) {
+    
+    if (d == NoMove) {
+        unsigned char * count = getWalkCount(p.x,p.y,b);
+        (*count)++;
+    }
+    else{
+        performMove(d, p, b);
+        Position t = getMonsterPosition(b);
+        unsigned char * count = getWalkCount(t.x,t.y,b);
+        (*count)++;
+        
+    }
     
 }
 
+//Determines which direction the ghost should move.
+//It will first find any directions it can move in, before tries to find a best move
+//The best move i calculated by combining the distance to player and
+//by checking the ghostXWalkCount array to see if ghost has been in the location before.
+//this is to prevent the ghost from getting stuck in one location.
+Direction determineGhostMove(Position ghostPosition, Block ghost) {
+    
+    int x = ghostPosition.x;
+    int y = ghostPosition.y;
+    
+    char r = possibleMoves(x,y);
+    int bestMoveDistance = 0;
+    int bestMoveBeenHere = 0;
+    Direction bestMove = NoMove;
+    if ((r & 0x01) > 0) {
+        Position p = {.x = x-1, .y = y};
+        int distance = distanceToPlayer(p);
+        int beenHere = *getWalkCount(x-1, y, ghost);
+        
+        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
+            bestMove = Left;
+            bestMoveDistance = distance;
+            bestMoveBeenHere = beenHere;
+        }
+        
+    }
+    
+    if ((r & 0x02) > 0) {
+        Position p = {.x = x+1, .y = y};
+        int distance = distanceToPlayer(p);
+        int beenHere = *getWalkCount(x+1, y, ghost);
+        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
+            bestMove = Right;
+            bestMoveDistance = distance;
+            bestMoveBeenHere = beenHere;
+        }
+        
+    }
+    
+    if ((r & 0x04) > 0) {
+        Position p = {.x = x, .y = y-1};
+        int distance = distanceToPlayer(p);
+        int beenHere = *getWalkCount(x, y-1, ghost);
+        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
+            bestMove = Up;
+            bestMoveDistance = distance;
+            bestMoveBeenHere = beenHere;
+        }
+        
+    }
+    
+    if ((r & 0x08) > 0) {
+        Position p = {.x = x, .y = y+1};
+        int distance = distanceToPlayer(p);
+        int beenHere = *getWalkCount(x, y+1, ghost);
+        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
+            bestMove = Down;
+            bestMoveDistance = distance;
+            bestMoveBeenHere = beenHere;
+        }
+        
+    }
+    
+    return bestMove;
+    
+}
+
+//Helper function used byt the determineGhostMove function.
+//It checks if the x,y block is walkable for a ghost
 short walkable(int x, int y) {
     if(x < 0 || x > W_BLOCKS-1 || y < 0 || y > H_BLOCKS-1) return 0;
-
+    
     Block b = gameBoard[x][y];
-
+    
     switch(b) {
         case Ground:
             return 1;
@@ -309,10 +386,11 @@ short walkable(int x, int y) {
     }
 }
 
+//determines what moves the ghost can make, based on input from walkable
 char possibleMoves(int x, int y) {
-
+    
     char r = (char) 0;
-
+    
     if (walkable(x-1, y)) { //Walk left
         r = r | 0x01;
     }
@@ -324,318 +402,249 @@ char possibleMoves(int x, int y) {
     }
     if (walkable(x, y+1)) { //Walk Down
         r = r | 0x08;
-    } 
-
-    //printf("%x\n", r);
-
+    }
+    
     return r;
-
-}
-
-unsigned char * getWalkCount(int x, int y, Block b){
-
-    switch(b){
-
-        case Ghost1:
-            return &ghost1WalkCount[x][y];
-        case Ghost2:
-            return &ghost2WalkCount[x][y];
-        case Ghost3:
-            return &ghost3WalkCount[x][y];
-
-    }
-    return NULL;
-}
-Position getMonsterPosition(Block b){
-
-    switch(b){
-
-    case Ghost1:
-        return ghost1Pos;
-    case Ghost2:
-        return ghost2Pos;
-    case Ghost3:
-        return ghost3Pos;
-    }
-}
-//AI for the ghosts
-Direction determineGhostMove(Position ghostPosition, Block ghost) {
-/*
-    switch(ghost){
-        case Ghost1:
-            printf("Ghost1 AI:\n");
-            break;
-        case Ghost2:
-            printf("Ghost2 AI:\n");
-            break;
-        case Ghost3:
-            printf("Ghost3 AI:\n");
-            break;
-    }
-*/
-    int x = ghostPosition.x;
-    int y = ghostPosition.y;
-
-    char r = possibleMoves(x,y);
-    int bestMoveDistance = 0;
-    int bestMoveBeenHere = 0;
-    Direction bestMove = NoMove;
-    if ((r & 0x01) > 0) {
-        Position p = {.x = x-1, .y = y};
-        int distance = distanceToPlayer(p);
-        int beenHere = *getWalkCount(x-1, y, ghost);
-
-        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
-            bestMove = Left;
-            bestMoveDistance = distance;
-            bestMoveBeenHere = beenHere;
-        }
-
-    }
-
-    if ((r & 0x02) > 0) {
-        Position p = {.x = x+1, .y = y};
-        int distance = distanceToPlayer(p);
-        int beenHere = *getWalkCount(x+1, y, ghost);
-        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
-            bestMove = Right;
-            bestMoveDistance = distance;
-            bestMoveBeenHere = beenHere;
-        }
-
-    }
-
-    if ((r & 0x04) > 0) {
-        Position p = {.x = x, .y = y-1};
-        int distance = distanceToPlayer(p);
-        int beenHere = *getWalkCount(x, y-1, ghost);
-        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
-            bestMove = Up;
-            bestMoveDistance = distance;
-            bestMoveBeenHere = beenHere;
-        }
-
-    }
-
-    if ((r & 0x08) > 0) {
-        Position p = {.x = x, .y = y+1};
-        int distance = distanceToPlayer(p);
-        int beenHere = *getWalkCount(x, y+1, ghost);
-        if (bestMove == NoMove || bestMoveBeenHere > beenHere || ( bestMoveBeenHere == beenHere && distance < bestMoveDistance)){
-            bestMove = Down;
-            bestMoveDistance = distance;
-            bestMoveBeenHere = beenHere;
-        }
-
-    }
-    /*
-    printf("\t Possible moves: %x\n",r);
-    if ((r & 0x01) > 0) printf("\t Can go left\n");
-    if ((r & 0x02) > 0) printf("\t Can go right\n");
-    if ((r & 0x04) > 0) printf("\t Can go up\n");
-    if ((r & 0x08) > 0) printf("\t Can go down\n");
-    printf("\t BestMove: %x\n", bestMove);
-
-    if (bestMove == Left) printf("\t Going left\n");
-    if (bestMove == Right) printf("\t Going right\n");
-    if (bestMove == Up) printf("\t Going up\n");
-    if (bestMove == Down) printf("\t Going down\n");
-    printf("\t BestDistance: %d\n", bestMoveDistance);
-    printf("\t BestMoveBeenHere: %d\n", bestMoveBeenHere);*/
-    return bestMove;
-
-
-}
-
-int naive_wait(int wait){ // wait in ms
-	wait = wait;
-    int r = 0;
-	while(wait > 0){
-		int a = wait*wait;
-		wait--;
-        r += a;
-	}
-    return r;
-}
-
-int main(){
-
-    //printf("START\n");
-
-    initScreen();
-    initSound();
-    initLedButtons();
-    mainLoop();
-    closeScreen();
-    closeSound();
-    closeLedButtons();
-
-    return 0;
-}
-void moveGhost(Direction d, Position p, Block b) {
-
-    if (d == NoMove) {
-        unsigned char * count = getWalkCount(p.x,p.y,b);
-        (*count)++;
-    }   
-    else{
-        performMove(d, p, b);
-        Position t = getMonsterPosition(b);
-        unsigned char * count = getWalkCount(t.x,t.y,b);
-        (*count)++;
-
-    }
-
- }
-
-//A possible version of the main function/loop
-void mainLoop() {
-
-    fillBoard();
-    
-       
-
-    //Periodically check for input and other stuff
-    while (1) {
-                
-        //Check for input
-        char driverInput = readButtons();
-        
-        //Determine what buttons have been pressed, and execute the action
-        interpretButtonInput(driverInput);
-        feedBuffer();
-        //Move ghosts
-
-        if (timeStep > 50){
-            Direction ghost1Move = determineGhostMove(ghost1Pos, ghost1Block);
-            moveGhost(ghost1Move, ghost1Pos, ghost1Block);
-
-            Direction ghost2Move = determineGhostMove(ghost2Pos, ghost2Block);
-            moveGhost(ghost2Move, ghost2Pos, ghost2Block);
-
-            Direction ghost3Move = determineGhostMove(ghost3Pos, ghost3Block);
-            moveGhost(ghost3Move, ghost3Pos, ghost3Block);
-        }
-        timeStep += 1;
-
-        //Move the ghosts
-
-        renderBoard(TRUE);     
-        //naive_wait(4009000);
-    }
-    
     
 }
 
+//Find a direction to move based on the player input
 void interpretButtonInput(char driverInput) {
-
-
-    if (driverInput == 0) return; 
+    
+    if (driverInput == 0) return;
     
     if((driverInput & 0x80) != 0) { //SW7 pressed
         performMove(Up, player1Pos, player1Block);
     }
-
+    
     if((driverInput & 0x20) != 0) { //SW5 pressed
         performMove(Down, player1Pos, player1Block);
     }
-
+    
     if((driverInput & 0x04) != 0) { //SW2 pressed
         performMove(Left, player1Pos, player1Block);
     }
-
+    
     if((driverInput & 0x01) != 0) { //SW0 pressed
         performMove(Right, player1Pos, player1Block);
     }
     
 }
 
-void renderBoard(int optimize){
-	
-     
-	for (int i = 0; i < W_BLOCKS; i++){
-		for(int j = 0; j < H_BLOCKS; j++){
-            if (optimize == TRUE) {
-                if (changedFlag[i][j] == '1') {
-                    setBlock(i,j,gameBoard[i][j]);
+//Used to perform the actual move, after determining the direction for
+//either the ghosts or the player
+void performMove(Direction d, Position currentPos, Block b) {
+    
+    int x = currentPos.x;
+    int y = currentPos.y;
+    
+    switch(d){
+		case Left:
+            // currentPos.x - 1
+            if (x > 0 && gameBoard[x - 1][y] != obstacleBlock) {
+                
+                //Actions to consider if its a player
+                if (gameBoard[x-1][y] == foodBlock && b == player1Block) {
+                    foodObtained(x-1,y);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    if (walkIntoGhost(x-1,y)) return;
                 }
-            } else {
-                setBlock(i,j,gameBoard[i][j]);
+                
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+                    
+                    //Check if he killed a player
+                    if (gameBoard[x-1][y] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x-1, y, b);
+                    }
+                    
+                    //Check if he was standing on food
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x-1, y, b);
+                    setBoardBlock(x, y, neutralGroundBlock);
+                }
+                currentPos.x--;
             }
-		}
-	}
-    refreshScreen(currentFrameBuffer);
-    
-
-     
-}
-
-void setLifeBar(int lives) {
-    char r = 0;
-    for (int i = 0; i < lives;i++){
-
-        r = r >> 1;
-        r = r | 0x80;
-
+            
+			break;
+		case Right:
+            // currentPos.x + 1
+            if (x < W_BLOCKS-1 && gameBoard[x+1][y] != obstacleBlock) {
+                
+                //Actions to consider if its a player
+                if (gameBoard[x+1][y] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x+1,y);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    if (walkIntoGhost(x+1,y)) return;
+                }
+                
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+                    
+                    //Check if he killed a player
+                    if (gameBoard[x+1][y] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x+1, y, b);
+                    }
+                    
+                    //Check if he was standing on food
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x+1, y, b);
+                    setBoardBlock(x, y, neutralGroundBlock);
+                }
+                
+                currentPos.x++;
+                
+            }
+            
+			break;
+		case Up:
+            // currentPos.y - 1
+            if (y > 0 && gameBoard[x][y-1] != obstacleBlock) {
+                
+                //Actions to consider if its a player
+                if (gameBoard[x][y-1] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x,y-1);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    if (walkIntoGhost(x,y-1)) return;
+                }
+                
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+                    
+                    //Check if he killed a player
+                    if (gameBoard[x][y-1] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x, y-1, b);
+                    }
+                    
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x, y-1 , b);
+                    setBoardBlock(x, y, neutralGroundBlock);
+                }
+                
+                currentPos.y--;
+            }
+            
+			break;
+		case Down:
+            // Player1Pos.y + 1
+            if (y < H_BLOCKS-1 && gameBoard[x][y+1] != obstacleBlock) {
+                
+                //Actions to consider if its a player
+                if (gameBoard[x][y+1] == foodBlock && b == player1Block) { //Check for food
+                    foodObtained(x,y+1);
+                } else if (b == player1Block) { //Did the player run into a ghost?
+                    if (walkIntoGhost(x,y+1)) return;
+                }
+                
+                //Actions to consider if its a ghost
+                if (b != player1Block) {
+                    
+                    //Check if he killed a player
+                    if (gameBoard[x][y+1] == player1Block) {
+                        hitByGhost();
+                    } else { //Just walk to the new position
+                        setBoardBlock(x, y+1 , b);
+                    }
+                    
+                    if (foodLocation[x][y] == foodChar) {
+                        setBoardBlock(x,y, foodBlock);
+                    } else {
+                        setBoardBlock(x, y, neutralGroundBlock);
+                    }
+                } else { //Not a ghost, therefore a player. Move normally
+                    setBoardBlock(x, y+1 , b);
+                    setBoardBlock(x, y, neutralGroundBlock);
+                }
+                
+                currentPos.y++;
+            }
+			break;
     }
-    setLeds(r);
-    return;
-    if (lives == 1) {
-        setLeds(0x80);
-    } else if (lives == 2) {
-        setLeds(0xC0);
-    } else if (lives == 3) {
-        setLeds(0xE0);
-    }
-}
-
-void setBoardBlock(unsigned int x, unsigned y, Block b) {
-
-    if (x > W_BLOCKS || y > H_BLOCKS) return;
     
-    gameBoard[x][y] = b;
-
-    flagForRender(x,y);
+    //Update position
+    if (b == player1Block) {
+        player1Pos = currentPos;
+    } else if (b == ghost1Block) {
+        ghost1Pos = currentPos;
+    } else if (b == ghost2Block) {
+        ghost2Pos = currentPos;
+    } else if (b == ghost3Block) {
+        ghost3Pos = currentPos;
+    }
+    
+    //Check if level is cleared
+    levelCleared();
+    
 }
+
+//These functions perform initialization of various game logic
+/* GAME INITIALIZATION FUNCTIONS*/
 
 //Initial board settings
 void fillBoard() {
-
+    
+    //Choose sound to play
     backgroundSoundFile("./resources/sounds/IAmNobody.dat");
     
-    //Clear the board
+    //Clear the board and clear ghost walk count used by the AI
     for (int i = 0; i < W_BLOCKS; i++)
     {
         for (int j = 0; j < H_BLOCKS; j++)
         {
             gameBoard[i][j] = neutralGroundBlock;
-        }   
+            ghost1WalkCount[i][j] = 0;
+            ghost2WalkCount[i][j] = 0;
+            ghost3WalkCount[i][j] = 0;
+        }
     }
-
+    
     //Fill out obstacles
     drawBoard();
-
-    //Set initial player coordinates    
+    
+    //Set initial player coordinates
     player1Pos = startingPosition;
-
+    
     //Set player 1 position
     gameBoard[player1Pos.x][player1Pos.y] = player1Block;
-
+    
     //Set player lives, if its a new game (or game over from an old game)
     remainingLives = startingLives;
     setLifeBar(remainingLives);
-
-    //Monsters
+    
+    //Set the monsters position
     ghost1Pos = ghost1StartPosition;
     ghost2Pos = ghost2StartPosition;
     ghost3Pos = ghost3StartPosition;
-
+    
+    //Set the ghost sprites on the board
     gameBoard[ghost1Pos.x][ghost2Pos.y] = ghost1Block;
     gameBoard[ghost2Pos.x][ghost2Pos.y] = ghost2Block;
     gameBoard[ghost3Pos.x][ghost3Pos.y] = ghost3Block;
-
+    
+    //Variable used to give the player a head start
     timeStep = 0;
-
+    
     //Fill food ground
     remainingFood = 0;
     int i,j;
@@ -646,17 +655,16 @@ void fillBoard() {
                 foodLocation[i][j] = foodChar;
                 remainingFood++;
             }
-            ghost1WalkCount[i][j] = 0;
-            ghost2WalkCount[i][j] = 0;
-            ghost3WalkCount[i][j] = 0;
         }
     }
-    remainingFood = remainingFood/2;
-
     
+    
+    //The game requires only, remainingFood amounts of food, depending on the
+    //difficulty variable
+    remainingFood = remainingFood/difficulty;
+    
+    //Render the board once, without optimization.
     renderBoard(FALSE);
-
-
     
 }
 
@@ -790,4 +798,5 @@ void drawBoard() {
     gameBoard[20][5] = obstacleBlock;
     gameBoard[20][8] = obstacleBlock;
     gameBoard[20][12] = obstacleBlock;
+    
 }
