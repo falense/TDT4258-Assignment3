@@ -115,8 +115,8 @@ void foodObtained();
 //Setter/getter methods
 void setLifeBar(int lives);
 void setFlagForRender(int x, int y);
-void setBoardBlock(unsigned int x, unsigned y, Block b);
-unsigned char * getWalkCount(int x, int y, Block b);
+void setBoardBlock(unsigned int x, unsigned y, Block b)
+unsigned char * getWalkCount(int x, int y, Block b)
 Position getMonsterPosition(Block b);
 
 //Helper methods

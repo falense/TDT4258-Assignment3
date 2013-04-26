@@ -1,5 +1,5 @@
 
-HOSTIP = 129.241.103.243
+HOSTIP = 129.241.102.201
 MAKE = avr32-linux-gcc
 #MAKE = gcc
 
