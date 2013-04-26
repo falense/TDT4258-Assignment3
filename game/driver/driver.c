@@ -17,8 +17,6 @@
 
 #include "ap7000.h"
 
-
-
 /* prototyper */
 
 static int __init driver_init(void);
@@ -45,15 +43,8 @@ static struct file_operations driver_fops = {
 /* Major number */
 int major;
 
-int per_res, puer_res, ier_res, perLED_res, oer_res;
-
-
 /* Buffer to store data */
-char *memory_buffer;
-char *button_buffer;
 char *led_buffer;
-
-
 
 
 /*****************************************************************************/
@@ -66,12 +57,9 @@ volatile avr32_pio_t *piob = &AVR32_PIOB;
 volatile avr32_pio_t *pioc = &AVR32_PIOC;
 
 struct cdev *driver;
-void button_isr(void) {
 
-}
 static int __init driver_init (void) {
 
-  printk("<1> driver_init\n");
   /* allokere device-nummer */
   major = 252;
   int result;
@@ -89,13 +77,12 @@ static int __init driver_init (void) {
   } 
   memset(led_buffer, 0, 1);
 
-
   request_region(piob, pioc-piob, DEVICE_NAME);
   
-  piob->per = 0xffffffff;
-  piob->oer = 0xffffff00;
-  piob->codr = 0xffffff00;
-  piob->puer = 0x000000ff;
+  piob->per = 0xffffffff;   //enable the registers
+  piob->oer = 0xffffff00;   //set the output registers
+  piob->codr = 0xffffff00; // clear output data registers on every pin execpt the 8 first (buttons)
+  piob->puer = 0x000000ff; //enable pullup-resistors for the 8 first pins
 
   return 0;
 }
@@ -112,8 +99,6 @@ static void __exit driver_exit (void) {
     kfree(led_buffer);
   }
   
-
-  printk("<1> driver_exit\n");
   
 }
 
@@ -122,14 +107,13 @@ static void __exit driver_exit (void) {
 
 static int driver_open (struct inode *inode, struct file *filp) {
   
- // printk("<1> driver_open\n");
   return 0;   /* Success */
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int driver_release (struct inode *inode, struct file *filp) {
- // printk("<1> driver_release\n");
+
   return 0; /* Success */
 }
 
@@ -151,14 +135,17 @@ static ssize_t driver_read (struct file *filp, char __user *buff,
 static ssize_t driver_write (struct file *filp, const char __user *buff,
                size_t count, loff_t *offp) {
 
- // printk("<1> driver_write\n");
 
   copy_from_user(led_buffer,buff,1);
-  //printk("<1> Value written %d\n",led_buffer);
 
-  piob->codr = 0xffffff00;
+  piob->codr = 0xffffff00; // clear output data registers on every pin execpt the 8 first (buttons)
   unsigned int ledmapping = 0;
   char usrled = led_buffer[0];
+
+  /*
+  This code translate between two representations for LED patterns. As input to this translation we have usrled,
+  which is copied from the user. As output we have ledmapping which is set on the LEDs using the statement piob->sodr. 
+  */
   //Led 0
   if ((usrled & 0x01) > 0){
     ledmapping = ledmapping | 0x00000100;
@@ -192,7 +179,7 @@ static ssize_t driver_write (struct file *filp, const char __user *buff,
     ledmapping = ledmapping | 0x40000000;
   }
 
-  piob->sodr = ledmapping;// *led_buffer;//(char)(integer%256);
+  piob->sodr = ledmapping;
   
 
   return 1;
